@@ -1,8 +1,8 @@
 pub mod bitboard;
-pub mod generate_attacks;
+pub mod generate_attacks; // TODO: make this private
 pub mod lookup_table;
 mod magics;
-pub mod piece; // TODO: make this private
+pub mod piece;
 
 pub const BISHOP_OCC_BITS: [u8; 64] = [
     6, 5, 5, 5, 5, 5, 5, 6,
@@ -12,7 +12,7 @@ pub const BISHOP_OCC_BITS: [u8; 64] = [
     5, 5, 7, 9, 9, 7, 5, 5,
     5, 5, 7, 7, 7, 7, 5, 5,
     5, 5, 5, 5, 5, 5, 5, 5,
-    6, 5, 5, 5, 5, 5, 5, 6,
+    6, 5, 5, 5, 5, 5, 5, 6
 ];
 
 pub const ROOK_OCC_BITS: [u8; 64] = [
@@ -23,5 +23,5 @@ pub const ROOK_OCC_BITS: [u8; 64] = [
     11, 10, 10, 10, 10, 10, 10, 11,
     11, 10, 10, 10, 10, 10, 10, 11,
     11, 10, 10, 10, 10, 10, 10, 11,
-    12, 11, 11, 11, 11, 11, 11, 12,
+    12, 11, 11, 11, 11, 11, 11, 12
 ];

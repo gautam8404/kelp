@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 strum = "0.25.0"
 strum_macros = "0.25.1"
+rand = "0.8.5"

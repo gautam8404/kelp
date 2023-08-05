@@ -31,30 +31,30 @@ impl LookupTable {
     }
 
     fn init_slider_pieces(&mut self) {
+        let (mut rbits, mut occ_index,mut magic): (u32, u32, u64);
+        let mut attack_mask: BitBoard;
+
         for i in 0..64 {
             self.bishop_masks[i] = generate_bishop_mask(i);
             self.rook_masks[i] = generate_rook_mask(i);
 
-            let (mut rbits, mut occ_index,mut magic): (u32, u32, u32);
-            let (mut occupancy,mut attack_mask): (BitBoard, BitBoard);
-
             attack_mask = self.bishop_masks[i];
             rbits = attack_mask.count_bits() as u32;
-            occ_index = (1 << rbits) as u32;
+            occ_index = (1u32 << rbits);
 
             for j in 0..occ_index {
-                occupancy = set_occupancy(j as usize, attack_mask);
-                magic = ((occupancy.0.wrapping_mul(BISHOP_MAGICS[i])) >> (64 - BISHOP_OCC_BITS[i])) as u32;
+                let occupancy = set_occupancy(j as usize, attack_mask);
+                magic = ((occupancy.0.wrapping_mul(BISHOP_MAGICS[i])).wrapping_shr((64 - BISHOP_OCC_BITS[i]).into()));
                 self.bishop_attacks[i][magic as usize] = generate_bishop_attacks(i, occupancy);
             }
 
             attack_mask = self.rook_masks[i];
             rbits = attack_mask.count_bits() as u32;
-            occ_index = (1 << rbits) as u32;
+            occ_index = (1u32 << rbits);
 
             for j in 0..occ_index {
-                occupancy = set_occupancy(j as usize, attack_mask);
-                magic = ((occupancy.0.wrapping_mul(ROOK_MAGICS[i])) >> (64 - ROOK_OCC_BITS[i])) as u32;
+                let occupancy = set_occupancy(j as usize, attack_mask);
+                magic = ((occupancy.0.wrapping_mul(ROOK_MAGICS[i])).wrapping_shr((64 - ROOK_OCC_BITS[i]).into()));
                 self.rook_attacks[i][magic as usize] = generate_rook_attacks(i, occupancy);
 
             }
@@ -91,20 +91,20 @@ impl LookupTable {
 
     #[inline(always)]
     pub fn get_bishop_attacks(&self, square: u8, occupancy: BitBoard) -> BitBoard {
-        let occ = occupancy.0;
-        let magic_val = BISHOP_MAGICS[square as usize];
-        let shift = 64 - BISHOP_OCC_BITS[square as usize];
-        let magic = ((occ.wrapping_mul(magic_val)).wrapping_shr(shift as u32)) as u32;
-        self.bishop_attacks[square as usize][magic as usize]
+        let mut occ = occupancy.0;
+        occ &= self.bishop_masks[square as usize].0;
+        occ = occ.wrapping_mul(BISHOP_MAGICS[square as usize]);
+        occ >>= 64 - BISHOP_OCC_BITS[square as usize];
+        self.bishop_attacks[square as usize][occ as usize]
     }
 
     #[inline(always)]
     pub fn get_rook_attacks(&self, square: u8, occupancy: BitBoard) -> BitBoard {
-        let occ = occupancy.0;
-        let magic_val = ROOK_MAGICS[square as usize];
-        let shift = 64 - ROOK_OCC_BITS[square as usize];
-        let magic = ((occ.wrapping_mul(magic_val)).wrapping_shr(shift as u32)) as u32;
-        self.rook_attacks[square as usize][magic as usize]
+        let mut  occ = occupancy.0;
+        occ &= self.rook_masks[square as usize].0;
+        occ = occ.wrapping_mul(ROOK_MAGICS[square as usize]);
+        occ >>= 64 - ROOK_OCC_BITS[square as usize];
+        self.rook_attacks[square as usize][occ as usize]
     }
 
     #[inline(always)]
