@@ -3,8 +3,8 @@ use strum_macros::{Display, EnumIter, EnumString};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Display)]
 pub enum Color {
-    White,
-    Black,
+    White = 0,
+    Black = 1,
 }
 
 impl Not for Color {
@@ -51,18 +51,12 @@ impl BoardPiece {
     pub fn get_color(&self) -> Color {
         use BoardPiece::*;
         match self {
-            WhitePawn
-            | WhiteKnight
-            | WhiteBishop
-            | WhiteRook
-            | WhiteQueen
-            | WhiteKing => Color::White,
-            BlackPawn
-            | BlackKnight
-            | BlackBishop
-            | BlackRook
-            | BlackQueen
-            | BlackKing => Color::Black,
+            WhitePawn | WhiteKnight | WhiteBishop | WhiteRook | WhiteQueen | WhiteKing => {
+                Color::White
+            }
+            BlackPawn | BlackKnight | BlackBishop | BlackRook | BlackQueen | BlackKing => {
+                Color::Black
+            }
         }
     }
 
