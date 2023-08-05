@@ -44,10 +44,7 @@ impl LookupTable {
 
             for j in 0..occ_index {
                 occupancy = set_occupancy(j as usize, attack_mask);
-                let occ = occupancy.0;
-                let magic_val = BISHOP_MAGICS[i];
-                let shift = 64 - BISHOP_OCC_BITS[i];
-                magic = ((occ.wrapping_mul(magic_val)).wrapping_shr(shift as u32)) as u32;
+                magic = ((occupancy.0.wrapping_mul(BISHOP_MAGICS[i])) >> (64 - BISHOP_OCC_BITS[i])) as u32;
                 self.bishop_attacks[i][magic as usize] = generate_bishop_attacks(i, occupancy);
             }
 
@@ -57,11 +54,9 @@ impl LookupTable {
 
             for j in 0..occ_index {
                 occupancy = set_occupancy(j as usize, attack_mask);
-                let occ = occupancy.0;
-                let magic_val = ROOK_MAGICS[i];
-                let shift = 64 - ROOK_OCC_BITS[i];
-                magic = ((occ.wrapping_mul(magic_val)).wrapping_shr(shift as u32)) as u32;
+                magic = ((occupancy.0.wrapping_mul(ROOK_MAGICS[i])) >> (64 - ROOK_OCC_BITS[i])) as u32;
                 self.rook_attacks[i][magic as usize] = generate_rook_attacks(i, occupancy);
+
             }
 
         }
