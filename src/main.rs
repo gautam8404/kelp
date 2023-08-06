@@ -19,9 +19,12 @@ fn main() {
 
     let mut table : LookupTable = LookupTable::new();
     table.populate();
+    println!("{}", Squares::D5 as u8);
+    // print 35th bishop magic number in u64 format
+    println!("{}", 0x8646020080080080 as u64);
 
     // println!("{}", generate_rook_attacks(Squares::D5 as usize, board)); //72340172838076926
-    let b = table.get_bishop_attacks(Squares::D5 as u8, board);
+    let b = table.get_bishop_attacks(Squares::D5 as u8, BitBoard::empty());
     println!("{}", b);
 
     // let a = table.get_rook_attacks(0, board);

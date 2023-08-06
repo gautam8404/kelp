@@ -1,5 +1,5 @@
 use std::fmt::Display;
-use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Mul, MulAssign, Not, Shl, Shr};
+use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Mul, MulAssign, Not, Shl, ShlAssign, Shr, ShrAssign};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BitBoard(pub u64);
@@ -85,14 +85,14 @@ impl Mul for BitBoard {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        BitBoard(self.0 * rhs.0)
+        BitBoard(self.0.wrapping_mul(rhs.0))
     }
 }
 
 
 impl MulAssign for BitBoard {
     fn mul_assign(&mut self, rhs: Self) {
-        self.0 *= rhs.0;
+        self.0 = self.0.wrapping_mul(rhs.0);
     }
 }
 
@@ -149,6 +149,18 @@ impl Shr<u8> for BitBoard {
     }
 }
 
+impl ShrAssign<BitBoard> for BitBoard {
+    fn shr_assign(&mut self, rhs: BitBoard) {
+        self.0 >>= rhs.0;
+    }
+}
+
+impl ShrAssign<u8> for BitBoard {
+    fn shr_assign(&mut self, rhs: u8) {
+        self.0 >>= rhs;
+    }
+}
+
 impl Shl<BitBoard> for BitBoard {
     type Output = Self;
 
@@ -162,6 +174,12 @@ impl Shl<u8> for BitBoard {
 
     fn shl(self, rhs: u8) -> Self::Output {
         BitBoard(self.0 << rhs)
+    }
+}
+
+impl ShlAssign<BitBoard> for BitBoard {
+    fn shl_assign(&mut self, rhs: BitBoard) {
+        self.0 <<= rhs.0;
     }
 }
 
