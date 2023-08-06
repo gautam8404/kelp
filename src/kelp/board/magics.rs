@@ -1,3 +1,7 @@
+use super::generate_attacks::{generate_rook_mask, generate_bishop_mask};
+use super::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
+use super::bitboard::BitBoard;
+
 pub const ROOK_MAGICS: [u64; 64] = [
     0x8a80104000800020,
     0x140002000100040,
@@ -131,3 +135,49 @@ pub const BISHOP_MAGICS: [u64; 64] = [
     0x8918844842082200,
     0x4010011029020020,
 ];
+
+#[derive(Copy, Clone)]
+pub struct Magic {
+    pub mask: BitBoard,
+    pub magic: BitBoard,
+    pub shift: u8,
+}
+
+#[derive(Copy, Clone)]
+pub struct MagicTable {
+    pub rook: [Magic; 64],
+    pub bishop: [Magic; 64],
+}
+
+pub fn generate_magic_table() -> MagicTable {
+    let mut rook_table = [Magic {
+        mask: BitBoard::empty(),
+        magic: BitBoard::empty(),
+        shift: 0,
+    }; 64];
+    let mut bishop_table = [Magic {
+        mask: BitBoard::empty(),
+        magic: BitBoard::empty(),
+        shift: 0,
+    }; 64];
+
+    for i in 0..64 {
+        rook_table[i] = Magic {
+            mask: generate_rook_mask(i),
+            magic: BitBoard::from(ROOK_MAGICS[i]),
+            shift: 64 - ROOK_RELEVANT_BITS[i],
+        };
+        bishop_table[i] = Magic {
+            mask: generate_bishop_mask(i),
+            magic: BitBoard::from(BISHOP_MAGICS[i]),
+            shift: 64 - BISHOP_RELEVANT_BITS[i],
+        };
+    }
+
+    MagicTable {
+        rook: rook_table,
+        bishop: bishop_table,
+    }
+}
+
+

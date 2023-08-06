@@ -52,6 +52,10 @@ impl BitBoard {
         self.clear_bit(msb);
         msb
     }
+
+    pub fn empty() -> BitBoard {
+        BitBoard(0)
+    }
 }
 
 impl Display for BitBoard {

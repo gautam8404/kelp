@@ -1,8 +1,9 @@
+use std::process::id;
 use super::bitboard::BitBoard;
 use super::generate_attacks::*;
 use super::piece::Color;
-use super::magics::{ROOK_MAGICS, BISHOP_MAGICS};
-use super::{BISHOP_OCC_BITS, ROOK_OCC_BITS};
+use super::magics::*;
+use super::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
 
 pub struct LookupTable {
     pub pawn_attacks: [[BitBoard; 64]; 2],
@@ -30,36 +31,47 @@ impl LookupTable {
         }
     }
 
+
     fn init_slider_pieces(&mut self) {
-        let (mut rbits, mut occ_index,mut magic): (u32, u32, u64);
-        let mut attack_mask: BitBoard;
+        let magic_table = generate_magic_table();
 
         for i in 0..64 {
             self.bishop_masks[i] = generate_bishop_mask(i);
             self.rook_masks[i] = generate_rook_mask(i);
-
-            attack_mask = self.bishop_masks[i];
-            rbits = attack_mask.count_bits() as u32;
-            occ_index = (1u32 << rbits);
-
-            for j in 0..occ_index {
-                let occupancy = set_occupancy(j as usize, attack_mask);
-                magic = ((occupancy.0.wrapping_mul(BISHOP_MAGICS[i])).wrapping_shr((64 - BISHOP_OCC_BITS[i]).into()));
-                self.bishop_attacks[i][magic as usize] = generate_bishop_attacks(i, occupancy);
-            }
-
-            attack_mask = self.rook_masks[i];
-            rbits = attack_mask.count_bits() as u32;
-            occ_index = (1u32 << rbits);
-
-            for j in 0..occ_index {
-                let occupancy = set_occupancy(j as usize, attack_mask);
-                magic = ((occupancy.0.wrapping_mul(ROOK_MAGICS[i])).wrapping_shr((64 - ROOK_OCC_BITS[i]).into()));
-                self.rook_attacks[i][magic as usize] = generate_rook_attacks(i, occupancy);
-
-            }
-
         }
+
+        // Bishop
+        for sq in 0..64 {
+            let magic = magic_table.bishop[sq];
+            let bishop_mask = self.bishop_masks[sq];
+            let attack_mask = bishop_mask;
+
+            let relevant_bits  = attack_mask.count_bits();
+            let occ_idx: u32 = (1 << relevant_bits);
+
+            for idx in 0..occ_idx {
+                let occupancy = set_occupancy(idx, relevant_bits, attack_mask);
+                let magic_index: u16 = ((occupancy.0.wrapping_mul(magic.magic.0)) >> magic.shift) as u16;
+                self.bishop_attacks[sq][magic_index as usize] = generate_bishop_attacks(sq, occupancy);
+            }
+        }
+
+        // Rook
+        for sq in 0..64 {
+            let magic = magic_table.rook[sq];
+            let rook_mask = self.rook_masks[sq];
+            let attack_mask = rook_mask;
+
+            let relevant_bits  = attack_mask.count_bits();
+            let occ_idx: u32 = (1 << relevant_bits);
+
+            for idx in 0..occ_idx {
+                let occupancy = set_occupancy(idx, relevant_bits, attack_mask);
+                let magic_index = ((occupancy.0.wrapping_mul(magic.magic.0)) >> magic.shift) as u16;
+                self.rook_attacks[sq][magic_index as usize] = generate_rook_attacks(sq, occupancy);
+            }
+        }
+
     }
 
     pub fn new() -> LookupTable {
@@ -94,7 +106,7 @@ impl LookupTable {
         let mut occ = occupancy.0;
         occ &= self.bishop_masks[square as usize].0;
         occ = occ.wrapping_mul(BISHOP_MAGICS[square as usize]);
-        occ >>= 64 - BISHOP_OCC_BITS[square as usize];
+        occ >>= 64 - BISHOP_RELEVANT_BITS[square as usize];
         self.bishop_attacks[square as usize][occ as usize]
     }
 
@@ -103,7 +115,7 @@ impl LookupTable {
         let mut  occ = occupancy.0;
         occ &= self.rook_masks[square as usize].0;
         occ = occ.wrapping_mul(ROOK_MAGICS[square as usize]);
-        occ >>= 64 - ROOK_OCC_BITS[square as usize];
+        occ >>= 64 - ROOK_RELEVANT_BITS[square as usize];
         self.rook_attacks[square as usize][occ as usize]
     }
 

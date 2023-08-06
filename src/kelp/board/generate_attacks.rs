@@ -224,14 +224,14 @@ pub fn generate_rook_attacks(square: usize, blockers: BitBoard) -> BitBoard {
     attacks
 }
 
-pub fn set_occupancy(index: usize, mask: BitBoard) -> BitBoard {
+pub fn set_occupancy(index: u32, bits_in_mask: u8, mask: BitBoard) -> BitBoard {
     let mut occupancy = BitBoard(0);
     let mut temp = mask;
-    let count = temp.count_bits();
 
-    for i in 0..count {
-        let square = temp.pop_lsb();
-        if index & (1 << i) != 0 {
+    for bit in 0..bits_in_mask {
+        let square = temp.get_lsb();
+        temp.clear_bit(square);
+        if (index & (1 << bit)) != 0 {
             occupancy.set_bit(square);
         }
     }

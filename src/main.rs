@@ -10,8 +10,8 @@ fn main() {
     // test.set_bit(Squares::D2 as u8);
     // let board = generate_rook_attacks(Squares::D5 as usize, test);
     // println!("{}", board);
-    let mut board = BitBoard(0);
-    board.set_bit(Squares::D3 as u8);
+    let mut board = BitBoard(0u64);
+    // board.set_bit(Squares::D3 as u8);
     // board.set_bit(Squares::D5 as u8);
 
     // let at = generate_rook_attacks(0 as usize, board);
@@ -21,7 +21,7 @@ fn main() {
     table.populate();
 
     // println!("{}", generate_rook_attacks(Squares::D5 as usize, board)); //72340172838076926
-    let b = table.get_rook_attacks(Squares::D6 as u8, board);
+    let b = table.get_bishop_attacks(Squares::D5 as u8, board);
     println!("{}", b);
 
     // let a = table.get_rook_attacks(0, board);
