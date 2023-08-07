@@ -1,11 +1,16 @@
+#[macro_use]
 mod kelp;
+
 use crate::kelp::board::fen::FenParse;
+use kelp::Squares;
 use crate::kelp::board::piece::Color;
 use kelp::board::bitboard::BitBoard;
 use kelp::board::lookup_table::LookupTable;
 use kelp::{BLACK_OCCUPIED, OCCUPIED, WHITE_OCCUPIED};
 
 use kelp::board::{board::Board, fen::Fen};
+
+
 
 fn main() {
     // let mut table : LookupTable = LookupTable::new();
@@ -22,4 +27,8 @@ fn main() {
     let board = Board::parse(fen).unwrap();
     println!("{}", board);
     println!("{:?}", board);
+
+    let num = str_to_enum!("d4", Squares);
+
+    println!("{}", num.unwrap() as u8);
 }

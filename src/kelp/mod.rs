@@ -1,8 +1,8 @@
 pub mod board;
-pub mod kelp;
+// pub mod kelp;
+
 
 use std::fmt::Debug;
-use std::ops::BitOr;
 use strum_macros::Display;
 use strum_macros::EnumIter;
 use strum_macros::EnumString;
@@ -139,4 +139,18 @@ pub enum Squares {
     A6 = 40, B6, C6, D6, E6, F6, G6, H6,
     A7 = 48, B7, C7, D7, E7, F7, G7, H7,
     A8 = 56, B8, C8, D8, E8, F8, G8, H8,
+}
+
+#[macro_export]
+macro_rules! str_to_enum {
+    ($s:expr, $enum_ty:ty) => {
+        {
+            use std::str::FromStr;
+
+            match <$enum_ty>::from_str($s) {
+                Ok(variant) => Some(variant),
+                Err(_) => None,
+            }
+        }
+    };
 }
