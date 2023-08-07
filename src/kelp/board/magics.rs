@@ -1,6 +1,6 @@
-use super::generate_attacks::{generate_rook_mask, generate_bishop_mask};
-use super::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
 use super::bitboard::BitBoard;
+use super::generate_attacks::{generate_bishop_mask, generate_rook_mask};
+use super::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
 
 pub const ROOK_MAGICS: [u64; 64] = [
     0x8a80104000800020,
@@ -66,7 +66,7 @@ pub const ROOK_MAGICS: [u64; 64] = [
     0x20030a0244872,
     0x12001008414402,
     0x2006104900a0804,
-    0x1004081002402
+    0x1004081002402,
 ];
 
 pub const BISHOP_MAGICS: [u64; 64] = [
@@ -136,8 +136,6 @@ pub const BISHOP_MAGICS: [u64; 64] = [
     0x4010011029020020,
 ];
 
-
-
 #[derive(Copy, Clone)]
 pub struct Magic {
     pub mask: BitBoard,
@@ -181,5 +179,3 @@ pub fn generate_magic_table() -> MagicTable {
         bishop: bishop_table,
     }
 }
-
-

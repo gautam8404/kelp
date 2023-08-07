@@ -1,18 +1,25 @@
 mod kelp;
+use crate::kelp::board::fen::FenParse;
 use crate::kelp::board::piece::Color;
 use kelp::board::bitboard::BitBoard;
-use kelp::{WHITE_OCCUPIED, BLACK_OCCUPIED, OCCUPIED};
 use kelp::board::lookup_table::LookupTable;
+use kelp::{BLACK_OCCUPIED, OCCUPIED, WHITE_OCCUPIED};
+
+use kelp::board::{board::Board, fen::Fen};
 
 fn main() {
+    // let mut table : LookupTable = LookupTable::new();
+    // table.populate();
+    //  let board = BitBoard::empty();
+    //
+    // // print!("{}", table.get_bishop_attacks(0, board));
+    // println!("{}", kelp::board::piece::BoardPiece::WhiteBishop as u8);
 
+    let starring_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR \
+    b KQq - 0 1";
 
-    let mut table : LookupTable = LookupTable::new();
-    table.populate();
-     let board = BitBoard::empty();
-
-    // print!("{}", table.get_bishop_attacks(0, board));
-    println!("{}", kelp::board::piece::BoardPiece::WhiteBishop as u8);
-
-
+    let mut fen = Fen::new(starring_fen.to_string());
+    let board = Board::parse(fen).unwrap();
+    println!("{}", board);
+    println!("{:?}", board);
 }

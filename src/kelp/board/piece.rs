@@ -78,3 +78,45 @@ impl BoardPiece {
         }
     }
 }
+
+impl From<u8> for BoardPiece {
+    fn from(piece: u8) -> Self {
+        use BoardPiece::*;
+        match piece {
+            0 => WhitePawn,
+            1 => WhiteKnight,
+            2 => WhiteBishop,
+            3 => WhiteRook,
+            4 => WhiteQueen,
+            5 => WhiteKing,
+            6 => BlackPawn,
+            7 => BlackKnight,
+            8 => BlackBishop,
+            9 => BlackRook,
+            10 => BlackQueen,
+            11 => BlackKing,
+            _ => panic!("Invalid piece: {}", piece),
+        }
+    }
+}
+
+impl From<char> for BoardPiece {
+    fn from(piece: char) -> Self {
+        use BoardPiece::*;
+        match piece {
+            'P' => WhitePawn,
+            'N' => WhiteKnight,
+            'B' => WhiteBishop,
+            'R' => WhiteRook,
+            'Q' => WhiteQueen,
+            'K' => WhiteKing,
+            'p' => BlackPawn,
+            'n' => BlackKnight,
+            'b' => BlackBishop,
+            'r' => BlackRook,
+            'q' => BlackQueen,
+            'k' => BlackKing,
+            _ => panic!("Invalid piece: {}", piece),
+        }
+    }
+}

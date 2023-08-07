@@ -1,5 +1,7 @@
 use std::fmt::Display;
-use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Mul, MulAssign, Not, Shl, ShlAssign, Shr, ShrAssign};
+use std::ops::{
+    BitAnd, BitAndAssign, BitOr, BitOrAssign, Mul, MulAssign, Not, Shl, ShlAssign, Shr, ShrAssign,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BitBoard(pub u64);
@@ -89,13 +91,11 @@ impl Mul for BitBoard {
     }
 }
 
-
 impl MulAssign for BitBoard {
     fn mul_assign(&mut self, rhs: Self) {
         self.0 = self.0.wrapping_mul(rhs.0);
     }
 }
-
 
 impl Not for BitBoard {
     type Output = Self;

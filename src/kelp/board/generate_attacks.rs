@@ -1,7 +1,6 @@
 use super::bitboard::BitBoard;
 use super::piece::Color;
 
-
 const FILE_A: u64 = 0b00000001_00000001_00000001_00000001_00000001_00000001_00000001_00000001;
 const FILE_B: u64 = 0b00000010_00000010_00000010_00000010_00000010_00000010_00000010_00000010;
 const FILE_G: u64 = 0b01000000_01000000_01000000_01000000_01000000_01000000_01000000_01000000;
@@ -110,13 +109,13 @@ pub fn generate_rook_mask(square: usize) -> BitBoard {
     for rank in (t_rank + 1)..7 {
         mask |= BitBoard(1u64 << (rank * 8 + t_file));
     }
-    for rank in (1..=t_rank ).rev() {
+    for rank in (1..=t_rank).rev() {
         mask |= BitBoard(1u64 << (rank * 8 + t_file));
     }
     for file in (t_file + 1)..7 {
         mask |= BitBoard(1u64 << (t_rank * 8 + file));
     }
-    for file in (1..=t_file ).rev() {
+    for file in (1..=t_file).rev() {
         mask |= BitBoard(1u64 << (t_rank * 8 + file));
     }
 
@@ -125,8 +124,7 @@ pub fn generate_rook_mask(square: usize) -> BitBoard {
 
 pub fn generate_bishop_attacks(square: usize, blockers: BitBoard) -> BitBoard {
     let mut attacks = BitBoard(0);
-    let (mut t_rank,mut t_file): (usize, usize) = (square / 8, square % 8);
-
+    let (mut t_rank, mut t_file): (usize, usize) = (square / 8, square % 8);
 
     // Top-right direction
     while t_rank < 7 && t_file < 7 {
@@ -178,7 +176,7 @@ pub fn generate_bishop_attacks(square: usize, blockers: BitBoard) -> BitBoard {
 
 pub fn generate_rook_attacks(square: usize, blockers: BitBoard) -> BitBoard {
     let mut attacks = BitBoard(0);
-    let (mut t_rank,mut t_file): (usize, usize) = (square / 8, square % 8);
+    let (mut t_rank, mut t_file): (usize, usize) = (square / 8, square % 8);
 
     // Top direction
     while t_rank < 7 {
@@ -219,7 +217,6 @@ pub fn generate_rook_attacks(square: usize, blockers: BitBoard) -> BitBoard {
         }
     }
 
-
     attacks.clear_bit(square as u8);
     attacks
 }
@@ -238,29 +235,3 @@ pub fn set_occupancy(index: u32, bits_in_mask: u8, mask: BitBoard) -> BitBoard {
 
     occupancy
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

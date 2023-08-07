@@ -1,9 +1,9 @@
-use std::process::id;
 use super::bitboard::BitBoard;
 use super::generate_attacks::*;
-use super::piece::Color;
 use super::magics::*;
+use super::piece::Color;
 use super::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
+use std::process::id;
 
 pub struct LookupTable {
     pawn_attacks: [[BitBoard; 64]; 2],
@@ -33,7 +33,6 @@ impl LookupTable {
         }
     }
 
-
     fn init_slider_pieces(&mut self) {
         let magic_table = self.magic_table;
 
@@ -44,7 +43,8 @@ impl LookupTable {
                 let magic = magic_table.bishop[sq];
                 let occupancy = set_occupancy(idx, BISHOP_RELEVANT_BITS[sq], magic.mask);
                 let magic_index = ((occupancy * magic.magic) >> magic.shift).0 as u16;
-                self.bishop_attacks[sq][magic_index as usize] = generate_bishop_attacks(sq, occupancy);
+                self.bishop_attacks[sq][magic_index as usize] =
+                    generate_bishop_attacks(sq, occupancy);
             }
         }
 
@@ -58,7 +58,6 @@ impl LookupTable {
                 self.rook_attacks[sq][magic_index as usize] = generate_rook_attacks(sq, occupancy);
             }
         }
-
     }
 
     pub fn new() -> LookupTable {
