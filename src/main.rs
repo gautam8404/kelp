@@ -27,5 +27,5 @@ fn main() {
 
     let num = str_to_enum!("d4", Squares);
 
-    println!("{}", num.unwrap() as u8);
+    println!("{}", num.unwrap());
 }

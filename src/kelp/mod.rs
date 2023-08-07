@@ -146,8 +146,8 @@ macro_rules! str_to_enum {
         use std::str::FromStr;
 
         match <$enum_ty>::from_str($s) {
-            Ok(variant) => Some(variant),
-            Err(_) => None,
+            Ok(variant) => Ok(variant),
+            Err(_) => Err(format!("Invalid {} value: {}", stringify!($enum_ty), $s)),
         }
     }};
 }

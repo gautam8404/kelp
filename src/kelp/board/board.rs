@@ -93,7 +93,16 @@ impl FenParse<Fen, Board, FenParseError> for Board {
 
         let en_passant = match parts[3] {
             "-" => None,
-            _ => Some(str_to_enum!(parts[3], Squares).unwrap()),
+            _ => Some({
+                let enp = str_to_enum!(parts[3], Squares);
+                if enp.is_err() {
+                    return Err(FenParseError::InvalidEnPassant(format!(
+                        "Invalid en passant square: {}",
+                        parts[3]
+                    )));
+                }
+                enp.unwrap()
+            }),
         };
 
         let halfmove_clock = parts[4].parse::<u8>().unwrap();
