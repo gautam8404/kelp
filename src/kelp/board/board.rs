@@ -9,6 +9,8 @@ use super::super::{
 use super::fen::Fen;
 use crate::kelp::board::fen::{FenParse, FenParseError};
 use std::fmt::{Debug, Display};
+use crate::kelp::Squares;
+use crate::str_to_enum;
 
 #[derive(Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Board {
@@ -91,7 +93,7 @@ impl FenParse<Fen, Board, FenParseError> for Board {
 
         let en_passant = match parts[3] {
             "-" => None,
-            _ => Some(parts[3].parse::<u8>().unwrap()),
+            _ => Some(str_to_enum!(parts[3], Squares).unwrap()),
         };
 
         let halfmove_clock = parts[4].parse::<u8>().unwrap();

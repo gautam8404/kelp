@@ -1,7 +1,6 @@
 pub mod board;
 // pub mod kelp;
 
-
 use std::fmt::Debug;
 use strum_macros::Display;
 use strum_macros::EnumIter;
@@ -101,7 +100,7 @@ impl Castle {
 pub struct BoardInfo {
     pub turn: Color,
     pub castling_rights: Castle,
-    pub en_passant: Option<u8>,
+    pub en_passant: Option<Squares>,
     pub halfmove_clock: u8,
     pub fullmove_clock: u8,
 }
@@ -143,14 +142,12 @@ pub enum Squares {
 
 #[macro_export]
 macro_rules! str_to_enum {
-    ($s:expr, $enum_ty:ty) => {
-        {
-            use std::str::FromStr;
+    ($s:expr, $enum_ty:ty) => {{
+        use std::str::FromStr;
 
-            match <$enum_ty>::from_str($s) {
-                Ok(variant) => Some(variant),
-                Err(_) => None,
-            }
+        match <$enum_ty>::from_str($s) {
+            Ok(variant) => Some(variant),
+            Err(_) => None,
         }
-    };
+    }};
 }
