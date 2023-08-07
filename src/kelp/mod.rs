@@ -1,12 +1,13 @@
+pub mod kelp_core;
 pub mod board;
-// pub mod kelp;
+pub mod kelp;
 
 use std::fmt::Debug;
-use strum_macros::Display;
-use strum_macros::EnumIter;
-use strum_macros::EnumString;
+use strum_macros::{Display, FromRepr, EnumIter, EnumString};
+use std::str::FromStr;
+use strum::IntoEnumIterator; // traits need to be in scope to use them
 
-use board::bitboard::BitBoard;
+use kelp_core::bitboard::BitBoard;
 use board::piece::BoardPiece;
 use board::piece::Color;
 
@@ -27,6 +28,7 @@ pub const WHITE_OCCUPIED: u64 = 0x000000000000FFFF;
 pub const BLACK_OCCUPIED: u64 = 0xFFFF000000000000;
 pub const OCCUPIED: u64 = 0xFFFF00000000FFFF;
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Display, EnumIter, EnumString)]
 pub enum CastlingRights {
     #[strum(serialize = "K")]
@@ -46,16 +48,16 @@ impl Debug for Castle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut castle = String::new();
         if self.can_castle_king_side(Color::White) {
-            castle.push_str("K");
+            castle.push('K');
         }
         if self.can_castle_queen_side(Color::White) {
-            castle.push_str("Q");
+            castle.push('Q');
         }
         if self.can_castle_king_side(Color::Black) {
-            castle.push_str("k");
+            castle.push('k');
         }
         if self.can_castle_queen_side(Color::Black) {
-            castle.push_str("q");
+            castle.push('q');
         }
         write!(f, "Castle({})", castle)
     }
@@ -125,10 +127,11 @@ pub enum GameResult {
     InsufficientMaterial,
 }
 
-#[repr(u8)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, EnumIter, EnumString, Display)]
-#[strum(ascii_case_insensitive, serialize_all = "lowercase")]
+
 #[rustfmt::skip]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, FromRepr, EnumIter, EnumString, Display)]
+#[strum(ascii_case_insensitive, serialize_all = "lowercase")]
 pub enum Squares {
     A1 = 0, B1, C1, D1, E1, F1, G1, H1,
     A2 = 8, B2, C2, D2, E2, F2, G2, H2,
@@ -138,16 +141,4 @@ pub enum Squares {
     A6 = 40, B6, C6, D6, E6, F6, G6, H6,
     A7 = 48, B7, C7, D7, E7, F7, G7, H7,
     A8 = 56, B8, C8, D8, E8, F8, G8, H8,
-}
-
-#[macro_export]
-macro_rules! str_to_enum {
-    ($s:expr, $enum_ty:ty) => {{
-        use std::str::FromStr;
-
-        match <$enum_ty>::from_str($s) {
-            Ok(variant) => Ok(variant),
-            Err(_) => Err(format!("Invalid {} value: {}", stringify!($enum_ty), $s)),
-        }
-    }};
 }

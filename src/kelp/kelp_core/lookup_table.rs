@@ -1,7 +1,7 @@
 use super::bitboard::BitBoard;
 use super::generate_attacks::*;
 use super::magics::*;
-use super::piece::Color;
+use crate::kelp::board::piece::Color;
 use super::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
 use std::process::id;
 

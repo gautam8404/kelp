@@ -1,5 +1,5 @@
 use super::bitboard::BitBoard;
-use super::piece::Color;
+use crate::kelp::board::piece::Color;
 
 const FILE_A: u64 = 0b00000001_00000001_00000001_00000001_00000001_00000001_00000001_00000001;
 const FILE_B: u64 = 0b00000010_00000010_00000010_00000010_00000010_00000010_00000010_00000010;

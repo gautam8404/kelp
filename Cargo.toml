@@ -8,4 +8,14 @@ edition = "2021"
 [dependencies]
 strum = "0.25.0"
 strum_macros = "0.25.1"
-rand = "0.8.5"
+
+
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+debug-assertions = false
+codegen-units = 1
+lto = true
+panic = "abort"

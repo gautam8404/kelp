@@ -1,4 +1,4 @@
-use crate::kelp::board::board::Board;
+use super::board::Board;
 use crate::kelp::BoardInfo;
 use strum_macros::{Display, EnumIter, EnumString};
 

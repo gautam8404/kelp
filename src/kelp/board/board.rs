@@ -1,16 +1,13 @@
-use super::super::{
-    board::bitboard::BitBoard,
-    board::piece::{
-        BoardPiece::{self, *},
-        Color,
-    },
+use crate::kelp::{
+    kelp_core::bitboard::BitBoard,
     BitBoardArray, BoardInfo, Castle, CastlingRights, Move, MoveType,
 };
+use super::piece::{BoardPiece::{self, *}, Color};
 use super::fen::Fen;
-use crate::kelp::board::fen::{FenParse, FenParseError};
+use super::fen::{FenParse, FenParseError};
 use std::fmt::{Debug, Display};
+use std::str::FromStr;
 use crate::kelp::Squares;
-use crate::str_to_enum;
 
 #[derive(Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Board {
@@ -94,7 +91,7 @@ impl FenParse<Fen, Board, FenParseError> for Board {
         let en_passant = match parts[3] {
             "-" => None,
             _ => Some({
-                let enp = str_to_enum!(parts[3], Squares);
+                let enp = Squares::from_str(parts[3]);
                 if enp.is_err() {
                     return Err(FenParseError::InvalidEnPassant(format!(
                         "Invalid en passant square: {}",
