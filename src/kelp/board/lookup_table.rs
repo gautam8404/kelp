@@ -6,16 +6,16 @@ use super::magics::*;
 use super::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
 
 pub struct LookupTable {
-    pub pawn_attacks: [[BitBoard; 64]; 2],
-    pub knight_attacks: [BitBoard; 64],
-    pub king_attacks: [BitBoard; 64],
+    pawn_attacks: [[BitBoard; 64]; 2],
+    knight_attacks: [BitBoard; 64],
+    king_attacks: [BitBoard; 64],
 
-    pub bishop_masks: [BitBoard; 64],
-    pub rook_masks: [BitBoard; 64],
-    pub bishop_attacks: [[BitBoard; 1024]; 64],
-    pub rook_attacks: [[BitBoard; 4096]; 64],
+    bishop_masks: [BitBoard; 64],
+    rook_masks: [BitBoard; 64],
+    bishop_attacks: [[BitBoard; 1024]; 64],
+    rook_attacks: [[BitBoard; 4096]; 64],
 
-    pub magic_table: MagicTable,
+    magic_table: MagicTable,
 }
 
 impl LookupTable {

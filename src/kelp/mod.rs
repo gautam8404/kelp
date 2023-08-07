@@ -1,17 +1,46 @@
 pub mod board;
 pub mod kelp;
 
+use std::ops::BitOr;
+use strum_macros::EnumIter;
+use strum_macros::EnumString;
+use strum_macros::Display;
+
 use board::bitboard::BitBoard;
 use board::piece::BoardPiece;
 use board::piece::Color;
 
 pub type BitBoardArray = [BitBoard; 12];
 
+pub enum GamePhase {
+    Opening,
+    MiddleGame,
+    EndGame,
+}
+
+pub enum SideToMove {
+    White,
+    Black,
+}
+
+pub const WHITE_OCCUPIED: u64 = 0x000000000000FFFF;
+pub const BLACK_OCCUPIED: u64 = 0xFFFF000000000000;
+pub const OCCUPIED: u64 = 0xFFFF00000000FFFF;
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum CastlingRights {
-    WhiteKingSide,
-    WhiteQueenSide,
-    BlackKingSide,
-    BlackQueenSide,
+    WhiteKingSide = 1,
+    WhiteQueenSide = 2,
+    BlackKingSide = 4,
+    BlackQueenSide = 8,
+}
+
+pub struct BoardInfo {
+    pub turn: Color,
+    pub castling_rights: CastlingRights,
+    pub en_passant: Option<u8>,
+    pub halfmove_clock: u8,
+    pub fullmove_number: u16,
 }
 
 pub enum MoveType {
@@ -35,7 +64,9 @@ pub enum GameResult {
 }
 
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, EnumIter, EnumString, Display)]
+#[strum(ascii_case_insensitive, serialize_all = "lowercase")]
 pub enum Squares {
     A1 = 0, B1, C1, D1, E1, F1, G1, H1,
     A2 = 8, B2, C2, D2, E2, F2, G2, H2,
