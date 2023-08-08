@@ -11,20 +11,20 @@ use crate::kelp::{
 };
 use log::info;
 use strum::IntoEnumIterator;
-
-enum GenType {
-    Quiet,
-    Capture,
-}
+use crate::kelp::board::moves::GenType;
 
 pub struct MovGen<'a> {
     pub table: &'a LookupTable,
+    pub move_list: MoveList, // TODO: Make this private
 }
 
 impl<'a> MovGen<'a> {
     pub fn new(table: &'a LookupTable) -> MovGen<'a> {
         info!("Initializing move generator");
-        MovGen { table: table }
+        MovGen {
+            table: table,
+            move_list: MoveList::new(),
+        }
     }
 
     pub fn is_attacked(&self, square: Squares, color: Color, board: &Board) -> bool {
@@ -92,12 +92,15 @@ impl<'a> MovGen<'a> {
         }
         false
     }
+    pub fn getc(&mut self) {
+        todo!()
+    }
 
-    pub fn get_pawn_moves(&self, color: Color, board: &Board) -> MoveList {
-        let mut moves = match color {
+    fn generate_pawn_moves(&mut self, color: Color, board: &Board) {
+        match color {
             White => {
                 let bitboard = board.get_piece_occ(WhitePawn);
-                let mut moves = MoveList::new();
+                let moves = &mut self.move_list;
 
                 for sq in bitboard {
                     // Check if pawn is on the 8th rank or 1st rank
@@ -111,17 +114,18 @@ impl<'a> MovGen<'a> {
                     let square = Squares::from_repr(sq).unwrap();
 
                     // Generate normal pawn push
-                    let mut mv = Move::new(square, square + 8, WhitePawn, None, MoveType::Normal);
+                    let mut mv = Move::new(square, square + 8, WhitePawn, None, MoveType::Normal, GenType::Quiet);
                     moves.push(mv);
 
                     // Generate double pawn push
-                    if square.rank() == 1 && !board.get_occ().get_bit(sq + 16){
+                    if square.rank() == 1 && !board.get_occ().get_bit(sq + 16) {
                         mv = Move::new(
                             square,
                             square + 16,
                             WhitePawn,
                             None,
                             MoveType::DoublePawnPush,
+                            GenType::Quiet,
                         );
                         moves.push(mv);
 
@@ -136,21 +140,75 @@ impl<'a> MovGen<'a> {
                         mv.set_type(MoveType::Promotion(Some(WhiteKnight)));
                         moves.push(mv);
                     }
+                    // Generate Pawn Captures
+                    let attacks = self.table.get_pawn_attacks(White, sq);
+                    for attack in attacks {
+                        let target = Squares::from_repr(attack as u8).unwrap();
+                        let piece = board.get_piece(target);
+                        if piece.is_some() {
+                            let piece = piece.unwrap();
+                            if piece.get_color() != color {
+                                mv = Move::new(
+                                    square,
+                                    target,
+                                    WhitePawn,
+                                    Some(piece),
+                                    MoveType::Normal,
+                                    GenType::Capture,
+                                );
+                                moves.push(mv);
+
+                                // Generate Pawn Promotion Captures
+                                if target.rank() == 7 {
+                                    mv.set_type(MoveType::Promotion(Some(WhiteQueen)));
+                                    moves.push(mv);
+                                    mv.set_type(MoveType::Promotion(Some(WhiteRook)));
+                                    moves.push(mv);
+                                    mv.set_type(MoveType::Promotion(Some(WhiteBishop)));
+                                    moves.push(mv);
+                                    mv.set_type(MoveType::Promotion(Some(WhiteKnight)));
+                                    moves.push(mv);
+                                }
+                            }
+                        }
+                    }
+
+                    // Generate En Passant Captures
+                    if board.get_en_passant().is_some() {
+                        let en_passant = board.get_en_passant().unwrap();
+                        if attacks.get_bit(en_passant as u8) {
+                            mv = Move::new(
+                                square,
+                                en_passant,
+                                WhitePawn,
+                                Some(BlackPawn),
+                                MoveType::EnPassant,
+                                GenType::Capture,
+                            );
+                            moves.push(mv);
+                        }
+                    }
                 }
-                moves
             }
             Black => {
                 let bitboard = board.get_piece_occ(BlackPawn);
-                let mut moves = MoveList::new();
+                let mut moves = &mut self.move_list;
                 for sq in bitboard {
+                    // Check if pawn is on the 8th rank or 1st rank
                     if sq >= 56 || sq <= 7 {
                         continue;
                     }
+                    // Check if pawn is blocked
                     if board.get_occ().get_bit(sq - 8) {
                         continue;
                     }
                     let square = Squares::from_repr(sq).unwrap();
-                    let mut mv = Move::new(square, square - 8, BlackPawn, None, MoveType::Normal);
+
+                    // Generate normal pawn push
+                    let mut mv = Move::new(square, square - 8, BlackPawn, None, MoveType::Normal, GenType::Quiet);
+                    moves.push(mv);
+
+                    // Generate double pawn push
                     if square.rank() == 6 && !board.get_occ().get_bit(sq - 16) {
                         mv = Move::new(
                             square,
@@ -158,8 +216,11 @@ impl<'a> MovGen<'a> {
                             BlackPawn,
                             None,
                             MoveType::DoublePawnPush,
+                            GenType::Quiet,
                         );
                         moves.push(mv);
+
+                        // Generate Pawn Promotions
                     } else if square.rank() == 1 {
                         mv.set_type(MoveType::Promotion(Some(BlackQueen)));
                         moves.push(mv);
@@ -169,18 +230,64 @@ impl<'a> MovGen<'a> {
                         moves.push(mv);
                         mv.set_type(MoveType::Promotion(Some(BlackKnight)));
                         moves.push(mv);
-                    } else {
-                        moves.push(mv);
+                    }
+
+                    // Generate Pawn Captures
+
+                    let attacks = self.table.get_pawn_attacks(Black, sq);
+                    for attack in attacks {
+                        let target = Squares::from_repr(attack as u8).unwrap();
+                        let piece = board.get_piece(target);
+                        if piece.is_some() {
+                            let piece = piece.unwrap();
+                            if piece.get_color() != color {
+                                mv = Move::new(
+                                    square,
+                                    target,
+                                    BlackPawn,
+                                    Some(piece),
+                                    MoveType::Normal,
+                                    GenType::Capture,
+                                );
+                                moves.push(mv);
+
+                                // Generate Pawn Promotion Captures
+                                if target.rank() == 0 {
+                                    mv.set_type(MoveType::Promotion(Some(BlackQueen)));
+                                    moves.push(mv);
+                                    mv.set_type(MoveType::Promotion(Some(BlackRook)));
+                                    moves.push(mv);
+                                    mv.set_type(MoveType::Promotion(Some(BlackBishop)));
+                                    moves.push(mv);
+                                    mv.set_type(MoveType::Promotion(Some(BlackKnight)));
+                                    moves.push(mv);
+                                }
+                            }
+                        }
+                    }
+
+                    // Generate En Passant Captures
+                    if board.get_en_passant().is_some() {
+                        let en_passant = board.get_en_passant().unwrap();
+                        if attacks.get_bit(en_passant as u8) {
+                            mv = Move::new(
+                                square,
+                                en_passant,
+                                BlackPawn,
+                                Some(WhitePawn),
+                                MoveType::EnPassant,
+                                GenType::Capture,
+                            );
+                            moves.push(mv);
+                        }
                     }
                 }
-                moves
             }
         };
-
-        moves
     }
-    pub fn generate_moves(&self, color: Color, board: &Board) -> MoveList {
-        todo!("generate moves")
+    pub fn generate_moves(&mut self, color: Color, board: &Board)  {
+        self.move_list.clear();
+        self.generate_pawn_moves(color, board);
     }
 
     pub fn print_attacked(&self, color: Color, board: &Board) {

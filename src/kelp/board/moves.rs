@@ -84,6 +84,12 @@ pub enum MoveType {
     Promotion(Option<BoardPiece>),
 }
 
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+pub enum GenType {
+    Quiet,
+    Capture,
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Move {
     pub from: Squares,
@@ -91,6 +97,7 @@ pub struct Move {
     pub piece: BoardPiece,
     pub capture: Option<BoardPiece>,
     pub move_type: MoveType,
+    pub gen_type: GenType,
 }
 
 impl Display for Move {
@@ -113,6 +120,7 @@ impl Move {
         piece: BoardPiece,
         capture: Option<BoardPiece>,
         move_type: MoveType,
+        gen_type: GenType,
     ) -> Self {
         Move {
             from,
@@ -120,6 +128,7 @@ impl Move {
             piece,
             capture,
             move_type,
+            gen_type,
         }
     }
 
@@ -129,6 +138,7 @@ impl Move {
         piece: BoardPiece,
         capture: Option<BoardPiece>,
         promotion: Option<BoardPiece>,
+        gen_type: GenType,
     ) -> Self {
         let move_type = MoveType::Promotion(promotion);
         Move {
@@ -137,6 +147,7 @@ impl Move {
             piece,
             capture,
             move_type,
+            gen_type,
         }
     }
 

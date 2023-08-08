@@ -45,7 +45,7 @@ impl Board {
         self.add_piece(piece, to);
     }
 
-    pub fn get_piece_at(&self, square: Squares) -> Option<BoardPiece> {
+    pub fn get_piece(&self, square: Squares) -> Option<BoardPiece> {
         BoardPiece::iter().find(|&piece| self.bitboards[piece as usize].get_bit(square as u8))
     }
 
@@ -95,6 +95,14 @@ impl Board {
 
     pub fn get_occ(&self) -> BitBoard {
         self.get_white_occ() | self.get_black_occ()
+    }
+
+    pub fn get_en_passant(&self) -> Option<Squares> {
+        self.info.en_passant
+    }
+
+    pub fn set_en_passant(&mut self, square: Squares) {
+        self.info.en_passant = Some(square);
     }
 }
 
