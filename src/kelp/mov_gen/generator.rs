@@ -1,15 +1,15 @@
-use log::info;
 use crate::kelp::board::board::Board;
 use crate::kelp::kelp_core::bitboard::BitBoard;
 use crate::kelp::kelp_core::lookup_table::LookupTable;
 use crate::kelp::{
+    board::moves::{Move, MoveList, MoveType},
     board::piece::{
         BoardPiece::{self, *},
         Color::{self, *},
     },
-    board::moves::{Move, MoveList, MoveType},
     Squares,
 };
+use log::info;
 use strum::IntoEnumIterator;
 
 enum GenType {
@@ -93,17 +93,40 @@ impl<'a> MovGen<'a> {
         false
     }
 
-    pub fn get_pawn_moves(&self ,color: Color, bitboard: BitBoard) -> MoveList {
+    pub fn get_pawn_moves(&self, color: Color, board: &Board) -> MoveList {
         let mut moves = match color {
             White => {
+                let bitboard = board.get_piece_occ(WhitePawn);
                 let mut moves = MoveList::new();
+
                 for sq in bitboard {
+                    // Check if pawn is on the 8th rank or 1st rank
+                    if sq >= 56 || sq <= 7 {
+                        continue;
+                    }
+                    // Check if pawn is blocked
+                    if board.get_occ().get_bit(sq + 8) {
+                        continue;
+                    }
                     let square = Squares::from_repr(sq).unwrap();
+
+                    // Generate normal pawn push
                     let mut mv = Move::new(square, square + 8, WhitePawn, None, MoveType::Normal);
-                    if square.rank() == 2 {
-                        mv.set_type(MoveType::DoublePawnPush);
+                    moves.push(mv);
+
+                    // Generate double pawn push
+                    if square.rank() == 1 && !board.get_occ().get_bit(sq + 16){
+                        mv = Move::new(
+                            square,
+                            square + 16,
+                            WhitePawn,
+                            None,
+                            MoveType::DoublePawnPush,
+                        );
                         moves.push(mv);
-                    } else if square.rank() == 7 {
+
+                        // Generate Pawn Promotions
+                    } else if square.rank() == 6 {
                         mv.set_type(MoveType::Promotion(Some(WhiteQueen)));
                         moves.push(mv);
                         mv.set_type(MoveType::Promotion(Some(WhiteRook)));
@@ -112,21 +135,32 @@ impl<'a> MovGen<'a> {
                         moves.push(mv);
                         mv.set_type(MoveType::Promotion(Some(WhiteKnight)));
                         moves.push(mv);
-                    } else {
-                        moves.push(mv);
                     }
                 }
                 moves
             }
             Black => {
+                let bitboard = board.get_piece_occ(BlackPawn);
                 let mut moves = MoveList::new();
                 for sq in bitboard {
+                    if sq >= 56 || sq <= 7 {
+                        continue;
+                    }
+                    if board.get_occ().get_bit(sq - 8) {
+                        continue;
+                    }
                     let square = Squares::from_repr(sq).unwrap();
                     let mut mv = Move::new(square, square - 8, BlackPawn, None, MoveType::Normal);
-                    if square.rank() == 7 {
-                        mv.set_type(MoveType::DoublePawnPush);
+                    if square.rank() == 6 && !board.get_occ().get_bit(sq - 16) {
+                        mv = Move::new(
+                            square,
+                            square - 16,
+                            BlackPawn,
+                            None,
+                            MoveType::DoublePawnPush,
+                        );
                         moves.push(mv);
-                    } else if square.rank() == 2 {
+                    } else if square.rank() == 1 {
                         mv.set_type(MoveType::Promotion(Some(BlackQueen)));
                         moves.push(mv);
                         mv.set_type(MoveType::Promotion(Some(BlackRook)));

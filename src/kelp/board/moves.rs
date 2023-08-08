@@ -1,10 +1,10 @@
 use super::piece::{BoardPiece, Color};
-use std::fmt::{Debug, Display};
-use strum_macros::{Display, EnumIter, EnumString};
-use crate::kelp::{MAX_SIZE_MOVES_ARR, Squares};
-use log;
 use crate::kelp::board::piece::BoardPiece::{BlackPawn, WhitePawn};
 use crate::kelp::SideToMove::Black;
+use crate::kelp::{Squares, MAX_SIZE_MOVES_ARR};
+use log;
+use std::fmt::{Debug, Display};
+use strum_macros::{Display, EnumIter, EnumString};
 
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Display, EnumIter, EnumString)]
@@ -96,12 +96,12 @@ pub struct Move {
 impl Display for Move {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.move_type {
-            MoveType::EnPassant => write!(f, "{}{}e.p.", self.piece, self.to),
+            MoveType::EnPassant => write!(f, "{}{}e.p.", self.from, self.to),
             MoveType::Castle(castle) => write!(f, "{}{}", self.piece, castle),
             MoveType::Promotion(Some(promotion)) => {
-                write!(f, "{}{}={}", self.piece, self.to, promotion)
+                write!(f, "{}{}{}", self.from, self.to, promotion)
             }
-            _ => write!(f, "{}{}", self.piece, self.to),
+            _ => write!(f, "{}{}", self.from, self.to),
         }
     }
 }
@@ -152,6 +152,13 @@ impl Move {
         matches!(self.move_type, MoveType::Promotion(_))
     }
 
+    pub fn get_promotion(&self) -> Option<BoardPiece> {
+        match self.move_type {
+            MoveType::Promotion(promotion) => promotion,
+            _ => None,
+        }
+    }
+
     pub fn is_en_passant(&self) -> bool {
         matches!(self.move_type, MoveType::EnPassant)
     }
@@ -195,5 +202,9 @@ impl MoveList {
 
     pub fn last(&self) -> Option<&Move> {
         self.0.last()
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<Move> {
+        self.0.iter()
     }
 }
