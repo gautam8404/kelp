@@ -99,6 +99,7 @@ pub fn generate_bishop_mask(square: usize) -> BitBoard {
         mask |= BitBoard(1u64 << (rank * 8 + file));
     }
 
+    mask.clear_bit(square as u8);
     mask
 }
 
@@ -119,6 +120,7 @@ pub fn generate_rook_mask(square: usize) -> BitBoard {
         mask |= BitBoard(1u64 << (t_rank * 8 + file));
     }
 
+    mask.clear_bit(square as u8);
     mask
 }
 
