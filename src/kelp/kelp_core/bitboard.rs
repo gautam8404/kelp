@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use std::ops::{
-    BitAnd, BitAndAssign, BitOr, BitOrAssign, Mul, MulAssign, Not, Shl, ShlAssign, Shr, ShrAssign,
+    BitAnd, BitAndAssign, BitOr, BitOrAssign, Deref, DerefMut, Mul, MulAssign, Not, Shl, ShlAssign,
+    Shr, ShrAssign,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -57,6 +58,20 @@ impl BitBoard {
 
     pub fn empty() -> BitBoard {
         BitBoard(0)
+    }
+}
+
+impl Deref for BitBoard {
+    type Target = u64;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for BitBoard {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 

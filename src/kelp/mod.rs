@@ -1,15 +1,14 @@
-pub mod kelp_core;
 pub mod board;
 pub mod kelp;
+pub mod kelp_core;
+pub mod mov_gen;
 
 use std::fmt::Debug;
-use strum_macros::{Display, FromRepr, EnumIter, EnumString};
-use std::str::FromStr;
-use strum::IntoEnumIterator; // traits need to be in scope to use them
+use strum_macros::{Display, EnumIter, EnumString, FromRepr};
 
-use kelp_core::bitboard::BitBoard;
-use board::piece::BoardPiece;
+use board::moves::Castle;
 use board::piece::Color;
+use kelp_core::bitboard::BitBoard;
 
 pub type BitBoardArray = [BitBoard; 12];
 
@@ -28,76 +27,6 @@ pub const WHITE_OCCUPIED: u64 = 0x000000000000FFFF;
 pub const BLACK_OCCUPIED: u64 = 0xFFFF000000000000;
 pub const OCCUPIED: u64 = 0xFFFF00000000FFFF;
 
-#[allow(clippy::enum_variant_names)]
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Display, EnumIter, EnumString)]
-pub enum CastlingRights {
-    #[strum(serialize = "K")]
-    WhiteKingSide = 1,
-    #[strum(serialize = "Q")]
-    WhiteQueenSide = 2,
-    #[strum(serialize = "k")]
-    BlackKingSide = 4,
-    #[strum(serialize = "q")]
-    BlackQueenSide = 8,
-}
-
-#[derive(Clone, Copy, Eq, PartialEq, Hash)]
-pub struct Castle(u8);
-
-impl Debug for Castle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut castle = String::new();
-        if self.can_castle_king_side(Color::White) {
-            castle.push('K');
-        }
-        if self.can_castle_queen_side(Color::White) {
-            castle.push('Q');
-        }
-        if self.can_castle_king_side(Color::Black) {
-            castle.push('k');
-        }
-        if self.can_castle_queen_side(Color::Black) {
-            castle.push('q');
-        }
-        write!(f, "Castle({})", castle)
-    }
-}
-
-impl Castle {
-    fn new() -> Self {
-        Castle(
-            CastlingRights::WhiteKingSide as u8
-                | CastlingRights::WhiteQueenSide as u8
-                | CastlingRights::BlackKingSide as u8
-                | CastlingRights::BlackQueenSide as u8,
-        )
-    }
-    fn remove(&mut self, castle: CastlingRights) {
-        self.0 &= !(castle as u8);
-    }
-
-    fn add(&mut self, castle: CastlingRights) {
-        self.0 |= castle as u8;
-    }
-    fn can_castle(&self, castle: CastlingRights) -> bool {
-        self.0 & (castle as u8) != 0
-    }
-
-    fn can_castle_king_side(&self, color: Color) -> bool {
-        match color {
-            Color::White => self.can_castle(CastlingRights::WhiteKingSide),
-            Color::Black => self.can_castle(CastlingRights::BlackKingSide),
-        }
-    }
-
-    fn can_castle_queen_side(&self, color: Color) -> bool {
-        match color {
-            Color::White => self.can_castle(CastlingRights::WhiteQueenSide),
-            Color::Black => self.can_castle(CastlingRights::BlackQueenSide),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct BoardInfo {
     pub turn: Color,
@@ -107,26 +36,11 @@ pub struct BoardInfo {
     pub fullmove_clock: u8,
 }
 
-pub enum MoveType {
-    Normal,
-    DoublePawnPush,
-    EnPassant,
-    Castle(CastlingRights),
-    Promotion(Option<BoardPiece>),
-}
-
-pub struct Move {
-    pub from: u8,
-    pub to: u8,
-    pub move_type: MoveType,
-}
-
 pub enum GameResult {
     Mate(Color),
     Stalemate,
     InsufficientMaterial,
 }
-
 
 #[rustfmt::skip]
 #[repr(u8)]
@@ -141,4 +55,11 @@ pub enum Squares {
     A6 = 40, B6, C6, D6, E6, F6, G6, H6,
     A7 = 48, B7, C7, D7, E7, F7, G7, H7,
     A8 = 56, B8, C8, D8, E8, F8, G8, H8,
+}
+
+impl Squares {
+    pub fn from_rank_file(rank: u8, file: u8) -> Squares {
+        let index = (rank * 8 + file) as usize;
+        Squares::from_repr(index as u8).unwrap()
+    }
 }

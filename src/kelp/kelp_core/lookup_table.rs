@@ -1,8 +1,8 @@
 use super::bitboard::BitBoard;
 use super::generate_attacks::*;
 use super::magics::*;
-use crate::kelp::board::piece::Color;
 use super::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
+use crate::kelp::board::piece::Color;
 use std::process::id;
 
 pub struct LookupTable {

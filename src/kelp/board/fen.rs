@@ -1,7 +1,3 @@
-use super::board::Board;
-use crate::kelp::BoardInfo;
-use strum_macros::{Display, EnumIter, EnumString};
-
 #[allow(clippy::enum_variant_names)]
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub enum FenParseError {
@@ -15,9 +11,7 @@ pub enum FenParseError {
 }
 
 #[derive(Clone, Eq, PartialEq, Hash)]
-pub struct Fen {
-    pub fen: String,
-}
+pub struct Fen(pub String);
 
 pub trait FenParse<I, T, E>: Sized {
     fn parse(val: I) -> Result<T, E>;
@@ -25,11 +19,13 @@ pub trait FenParse<I, T, E>: Sized {
 
 impl Fen {
     pub fn new(fen: String) -> Fen {
-        Fen { fen }
+        Fen(fen)
     }
 
     pub fn is_valid(&self) -> Result<(), FenParseError> {
-        let parts: Vec<&str> = self.fen.split_whitespace().collect::<Vec<&str>>();
+        /// A surface level check to see if the FEN string is valid.
+        /// This does not check if the board is valid.
+        let parts: Vec<&str> = self.0.split_whitespace().collect::<Vec<&str>>();
         if parts.len() != 6 {
             return Err(FenParseError::InvalidFen(format!(
                 "Invalid number of parts: {}, \

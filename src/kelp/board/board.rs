@@ -1,13 +1,14 @@
-use crate::kelp::{
-    kelp_core::bitboard::BitBoard,
-    BitBoardArray, BoardInfo, Castle, CastlingRights, Move, MoveType,
-};
-use super::piece::{BoardPiece::{self, *}, Color};
 use super::fen::Fen;
 use super::fen::{FenParse, FenParseError};
+use super::moves::{Castle, CastlingRights};
+use super::piece::{
+    BoardPiece::{self, *},
+    Color,
+};
+use crate::kelp::Squares;
+use crate::kelp::{kelp_core::bitboard::BitBoard, BitBoardArray, BoardInfo};
 use std::fmt::{Debug, Display};
 use std::str::FromStr;
-use crate::kelp::Squares;
 
 #[derive(Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Board {
@@ -28,6 +29,36 @@ impl Board {
             },
         }
     }
+
+    pub fn get_piece_occ(&self, piece: BoardPiece) -> BitBoard {
+        self.bitboards[piece as usize]
+    }
+
+    pub fn get_white_occ(&self) -> BitBoard {
+        let mut out = BitBoard::empty();
+        out = self.bitboards[WhitePawn as usize]
+            | self.bitboards[WhiteKnight as usize]
+            | self.bitboards[WhiteBishop as usize]
+            | self.bitboards[WhiteRook as usize]
+            | self.bitboards[WhiteQueen as usize]
+            | self.bitboards[WhiteKing as usize];
+        out
+    }
+
+    pub fn get_black_occ(&self) -> BitBoard {
+        let mut out = BitBoard::empty();
+        out = self.bitboards[BlackPawn as usize]
+            | self.bitboards[BlackKnight as usize]
+            | self.bitboards[BlackBishop as usize]
+            | self.bitboards[BlackRook as usize]
+            | self.bitboards[BlackQueen as usize]
+            | self.bitboards[BlackKing as usize];
+        out
+    }
+
+    pub fn get_occ(&self) -> BitBoard {
+        self.get_white_occ() | self.get_black_occ()
+    }
 }
 
 // Trait implementations
@@ -44,14 +75,21 @@ impl FenParse<Fen, Board, FenParseError> for Board {
             }
         }
 
-        let parts: Vec<&str> = fen.fen.split_whitespace().collect::<Vec<&str>>();
+        let parts: Vec<&str> = fen.0.split_whitespace().collect::<Vec<&str>>();
         let mut board = parts[0].split("/");
 
         for rank in (0..8).rev() {
             let mut file = 0;
             for c in board.next().unwrap().chars() {
                 if c.is_alphabetic() {
-                    let piece = BoardPiece::from(c);
+                    let piece = BoardPiece::from_str(c.to_string().as_str());
+                    if piece.is_err() {
+                        return Err(FenParseError::InvalidPiece(format!(
+                            "Invalid piece: {}",
+                            c
+                        )));
+                    }
+                    let piece = piece.unwrap();
                     bitboards[piece as usize].set_bit(rank * 8 + file);
                     file += 1;
                 } else if c.is_numeric() {
@@ -133,13 +171,17 @@ impl Display for Board {
                 board.push_str(&format!(
                     "{} ",
                     match piece {
-                        Some(p) => p.unicode(),
-                        None => ".",
+                        Some(p) => format!(" {}", p.unicode()),
+                        None => " .".to_string(),
                     }
                 ));
+                if file == 7 {
+                    board.push_str(&format!("\t{}", rank + 1));
+                }
             }
-            board.push_str("\n");
+            board.push('\n');
         }
+        board.push_str("\n a  b  c  d  e  f  g  h\n");
         write!(f, "{}", board)
     }
 }
@@ -159,14 +201,18 @@ impl Debug for Board {
                 board.push_str(&format!(
                     "{} ",
                     match piece {
-                        Some(p) => p.to_string(),
-                        None => ".".to_string(),
+                        Some(p) => format!(" {}", p.to_string()),
+                        None => " .".to_string(),
                     }
                 ));
+
+                if file == 7 {
+                    board.push_str(&format!("\t{}", rank + 1));
+                }
             }
             board.push_str("\n");
         }
-
+        board.push_str("\n a  b  c  d  e  f  g  h\n");
         let board_info = format!("{:?}", self.info);
         board.push_str(&board_info);
         write!(f, "{}", board)

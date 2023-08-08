@@ -1,6 +1,6 @@
 pub mod bitboard;
-pub mod lookup_table;
 mod generate_attacks;
+pub mod lookup_table;
 mod magics;
 
 pub const BISHOP_RELEVANT_BITS: [u8; 64] = [
