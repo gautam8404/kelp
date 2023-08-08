@@ -43,17 +43,17 @@ impl<'a> MovGen<'a> {
                     return true;
                 }
                 if (self.table.get_bishop_attacks(square as u8, board.get_occ())
-                    & board.get_piece_occ(WhiteBishop))
+                    & (board.get_piece_occ(WhiteBishop)) | (board.get_piece_occ(WhiteQueen)))
                     != BitBoard::empty()
                 {
                     return true;
                 }
-                // if (self.table.get_rook_attacks(square as u8, board.get_occ())
-                //     & (board.get_piece_occ(WhiteRook)) | (board.get_piece_occ(WhiteQueen)))
-                //     != BitBoard::empty()
-                // {
-                //     return true;
-                // }
+                if (self.table.get_rook_attacks(square as u8, board.get_occ())
+                    & (board.get_piece_occ(WhiteRook)) | (board.get_piece_occ(WhiteQueen)))
+                    != BitBoard::empty()
+                {
+                    return true;
+                }
             }
             Black => {
                 if (self.table.get_pawn_attacks(White, square as u8)
