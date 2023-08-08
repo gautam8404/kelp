@@ -29,11 +29,11 @@ fn main() {
     println!("{}", board.get_occ());
 
     println!("{}", board);
-    // println!(
-    //     "{}",
-    //     table.get_rook_attacks(Squares::E6 as u8, board.get_occ())
-    // );
-    println!("{}", table.get_bishop_attacks(Squares::D5 as u8, board.get_occ()));
+    println!(
+        "{}",
+        table.get_rook_attacks(Squares::E6 as u8, board.get_occ())
+        | table.get_bishop_attacks(Squares::D5 as u8, board.get_occ())
+    );
     let movgen = MovGen { table: &table };
     movgen.print_attacked(Color::White, &board);
 }
