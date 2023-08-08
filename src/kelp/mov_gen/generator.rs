@@ -1,3 +1,4 @@
+use log::info;
 use crate::kelp::board::board::Board;
 use crate::kelp::kelp_core::bitboard::BitBoard;
 use crate::kelp::kelp_core::lookup_table::LookupTable;
@@ -6,6 +7,7 @@ use crate::kelp::{
         BoardPiece::{self, *},
         Color::{self, *},
     },
+    board::moves::{Move, MoveList, MoveType},
     Squares,
 };
 use strum::IntoEnumIterator;
@@ -21,8 +23,10 @@ pub struct MovGen<'a> {
 
 impl<'a> MovGen<'a> {
     pub fn new(table: &'a LookupTable) -> MovGen<'a> {
+        info!("Initializing move generator");
         MovGen { table: table }
     }
+
     pub fn is_attacked(&self, square: Squares, color: Color, board: &Board) -> bool {
         match color {
             White => {
@@ -43,13 +47,13 @@ impl<'a> MovGen<'a> {
                     return true;
                 }
                 if (self.table.get_bishop_attacks(square as u8, board.get_occ())
-                    & (board.get_piece_occ(WhiteBishop)) | (board.get_piece_occ(WhiteQueen)))
+                    & (board.get_piece_occ(WhiteBishop) | board.get_piece_occ(WhiteQueen)))
                     != BitBoard::empty()
                 {
                     return true;
                 }
                 if (self.table.get_rook_attacks(square as u8, board.get_occ())
-                    & (board.get_piece_occ(WhiteRook)) | (board.get_piece_occ(WhiteQueen)))
+                    & (board.get_piece_occ(WhiteRook) | board.get_piece_occ(WhiteQueen)))
                     != BitBoard::empty()
                 {
                     return true;
@@ -87,6 +91,62 @@ impl<'a> MovGen<'a> {
             }
         }
         false
+    }
+
+    pub fn get_pawn_moves(&self ,color: Color, bitboard: BitBoard) -> MoveList {
+        let mut moves = match color {
+            White => {
+                let mut moves = MoveList::new();
+                for sq in bitboard {
+                    let square = Squares::from_repr(sq).unwrap();
+                    let mut mv = Move::new(square, square + 8, WhitePawn, None, MoveType::Normal);
+                    if square.rank() == 2 {
+                        mv.set_type(MoveType::DoublePawnPush);
+                        moves.push(mv);
+                    } else if square.rank() == 7 {
+                        mv.set_type(MoveType::Promotion(Some(WhiteQueen)));
+                        moves.push(mv);
+                        mv.set_type(MoveType::Promotion(Some(WhiteRook)));
+                        moves.push(mv);
+                        mv.set_type(MoveType::Promotion(Some(WhiteBishop)));
+                        moves.push(mv);
+                        mv.set_type(MoveType::Promotion(Some(WhiteKnight)));
+                        moves.push(mv);
+                    } else {
+                        moves.push(mv);
+                    }
+                }
+                moves
+            }
+            Black => {
+                let mut moves = MoveList::new();
+                for sq in bitboard {
+                    let square = Squares::from_repr(sq).unwrap();
+                    let mut mv = Move::new(square, square - 8, BlackPawn, None, MoveType::Normal);
+                    if square.rank() == 7 {
+                        mv.set_type(MoveType::DoublePawnPush);
+                        moves.push(mv);
+                    } else if square.rank() == 2 {
+                        mv.set_type(MoveType::Promotion(Some(BlackQueen)));
+                        moves.push(mv);
+                        mv.set_type(MoveType::Promotion(Some(BlackRook)));
+                        moves.push(mv);
+                        mv.set_type(MoveType::Promotion(Some(BlackBishop)));
+                        moves.push(mv);
+                        mv.set_type(MoveType::Promotion(Some(BlackKnight)));
+                        moves.push(mv);
+                    } else {
+                        moves.push(mv);
+                    }
+                }
+                moves
+            }
+        };
+
+        moves
+    }
+    pub fn generate_moves(&self, color: Color, board: &Board) -> MoveList {
+        todo!("generate moves")
     }
 
     pub fn print_attacked(&self, color: Color, board: &Board) {

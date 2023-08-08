@@ -4,7 +4,7 @@ use std::ops::{
     Shr, ShrAssign,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Eq)]
 pub struct BitBoard(pub u64);
 
 impl BitBoard {
@@ -58,6 +58,22 @@ impl BitBoard {
 
     pub fn empty() -> BitBoard {
         BitBoard(0)
+    }
+}
+impl PartialEq for BitBoard {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+impl Iterator for BitBoard {
+    type Item = u8;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.0 == 0 {
+            None
+        } else {
+            let lsb = self.pop_lsb();
+            Some(lsb)
+        }
     }
 }
 

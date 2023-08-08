@@ -5,29 +5,66 @@ use super::piece::{
     BoardPiece::{self, *},
     Color,
 };
+use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::Squares;
-use crate::kelp::{kelp_core::bitboard::BitBoard, BitBoardArray, BoardInfo};
+use crate::kelp::{kelp_core::bitboard::BitBoard, BitBoardArray, BoardInfo, GamePhase, GameState};
 use std::fmt::{Debug, Display};
 use std::str::FromStr;
+use strum::IntoEnumIterator;
 
-#[derive(Clone, Copy, Eq, PartialEq, Hash)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub struct Board {
     pub bitboards: BitBoardArray,
+    pub hash: u64,
+    pub state: GameState,
+    pub phase: GamePhase,
     pub info: BoardInfo,
 }
 
 impl Board {
-    pub fn new() -> Board {
-        Board {
-            bitboards: [BitBoard::empty(); 12],
-            info: BoardInfo {
-                turn: Color::White,
-                castling_rights: Castle::new(),
-                en_passant: None,
-                halfmove_clock: 0,
-                fullmove_clock: 1,
-            },
+    pub fn add_to_bb(&mut self, piece: BoardPiece, square: Squares) {
+        self.bitboards[piece as usize].set_bit(square as u8);
+    }
+
+    pub fn remove_from_bb(&mut self, piece: BoardPiece, square: Squares) {
+        self.bitboards[piece as usize].clear_bit(square as u8);
+    }
+
+    pub fn add_piece(&mut self, piece: BoardPiece, square: Squares) {
+        self.add_to_bb(piece, square);
+        // self.hash ^= crate::kelp::zobrist::get_piece_hash(piece, square); TODO
+    }
+
+    pub fn remove_piece(&mut self, piece: BoardPiece, square: Squares) {
+        self.remove_from_bb(piece, square);
+        // self.hash ^= crate::kelp::zobrist::get_piece_hash(piece, square); TODO
+    }
+
+    pub fn move_piece(&mut self, piece: BoardPiece, from: Squares, to: Squares) {
+        self.remove_piece(piece, from);
+        self.add_piece(piece, to);
+    }
+
+    pub fn get_piece_at(&self, square: Squares) -> Option<BoardPiece> {
+        BoardPiece::iter().find(|&piece| self.bitboards[piece as usize].get_bit(square as u8))
+    }
+
+    pub fn get_king_square(&self, color: Color) -> Squares {
+        let king = match color {
+            Color::White => WhiteKing,
+            Color::Black => BlackKing,
+        };
+
+        let sq = Squares::from_repr(self.bitboards[king as usize].get_lsb());
+        if sq.is_none() {
+            panic!("No king found for color {:?}", color);
         }
+        sq.unwrap()
+    }
+
+    pub fn is_king_checked(&self, color: Color, gen: &MovGen) -> bool {
+        let king = self.get_king_square(color);
+        gen.is_attacked(king, !color, self)
     }
 
     pub fn get_piece_occ(&self, piece: BoardPiece) -> BitBoard {
@@ -77,6 +114,7 @@ impl FenParse<Fen, Board, FenParseError> for Board {
 
         let parts: Vec<&str> = fen.0.split_whitespace().collect::<Vec<&str>>();
         let mut board = parts[0].split("/");
+        let mut number_of_pieces = 0;
 
         for rank in (0..8).rev() {
             let mut file = 0;
@@ -84,13 +122,11 @@ impl FenParse<Fen, Board, FenParseError> for Board {
                 if c.is_alphabetic() {
                     let piece = BoardPiece::from_str(c.to_string().as_str());
                     if piece.is_err() {
-                        return Err(FenParseError::InvalidPiece(format!(
-                            "Invalid piece: {}",
-                            c
-                        )));
+                        return Err(FenParseError::InvalidPiece(format!("Invalid piece: {}", c)));
                     }
                     let piece = piece.unwrap();
                     bitboards[piece as usize].set_bit(rank * 8 + file);
+                    number_of_pieces += 1;
                     file += 1;
                 } else if c.is_numeric() {
                     file += (c.to_digit(10).unwrap()) as u8;
@@ -143,11 +179,36 @@ impl FenParse<Fen, Board, FenParseError> for Board {
         let halfmove_clock = parts[4].parse::<u8>().unwrap();
         let fullmove_clock = parts[5].parse::<u8>().unwrap();
 
+        let game_phase = {
+            if number_of_pieces <= 12 {
+                GamePhase::EndGame
+            } else if number_of_pieces <= 24 {
+                GamePhase::MiddleGame
+            } else {
+                GamePhase::Opening
+            }
+        };
+
+        let game_state = {
+            if game_phase == GamePhase::EndGame {
+                if halfmove_clock >= 100 {
+                    GameState::Draw
+                } else {
+                    GameState::Playing
+                }
+            } else {
+                GameState::Playing
+            }
+        };
+
         Ok(Board {
             bitboards,
+            hash: 0, // TODO
+            state: game_state,
+            phase: game_phase,
             info: BoardInfo {
                 turn,
-                castling_rights,
+                castle: castling_rights,
                 en_passant,
                 halfmove_clock,
                 fullmove_clock,

@@ -4,6 +4,7 @@ pub mod kelp_core;
 pub mod mov_gen;
 
 use std::fmt::Debug;
+use std::ops::{Add, Sub};
 use strum_macros::{Display, EnumIter, EnumString, FromRepr};
 
 use board::moves::Castle;
@@ -12,10 +13,19 @@ use kelp_core::bitboard::BitBoard;
 
 pub type BitBoardArray = [BitBoard; 12];
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum GamePhase {
     Opening,
     MiddleGame,
     EndGame,
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub enum GameState {
+    Playing,
+    Draw,
+    Mate(Color),
+    Stalemate,
 }
 
 pub enum SideToMove {
@@ -27,19 +37,53 @@ pub const WHITE_OCCUPIED: u64 = 0x000000000000FFFF;
 pub const BLACK_OCCUPIED: u64 = 0xFFFF000000000000;
 pub const OCCUPIED: u64 = 0xFFFF00000000FFFF;
 
+pub const MAX_SIZE_MOVES_ARR: usize = 256;
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct BoardInfo {
-    pub turn: Color,
-    pub castling_rights: Castle,
-    pub en_passant: Option<Squares>,
-    pub halfmove_clock: u8,
-    pub fullmove_clock: u8,
+    turn: Color,
+    pub castle: Castle,
+    en_passant: Option<Squares>,
+    halfmove_clock: u8,
+    fullmove_clock: u8,
 }
 
-pub enum GameResult {
-    Mate(Color),
-    Stalemate,
-    InsufficientMaterial,
+impl BoardInfo {
+    pub fn toggle_turn(&mut self) {
+        self.turn = !self.turn;
+    }
+
+    pub fn set_turn(&mut self, color: Color) {
+        self.turn = color;
+    }
+
+    pub fn set_halfmove_clock(&mut self, value: u8) {
+        self.halfmove_clock = value;
+    }
+
+    pub fn set_fullmove_clock(&mut self, value: u8) {
+        self.fullmove_clock = value;
+    }
+
+    pub fn set_en_passant(&mut self, square: Option<Squares>) {
+        self.en_passant = square;
+    }
+
+    pub fn get_turn(&self) -> Color {
+        self.turn
+    }
+
+    pub fn get_halfmove_clock(&self) -> u8 {
+        self.halfmove_clock
+    }
+
+    pub fn get_fullmove_clock(&self) -> u8 {
+        self.fullmove_clock
+    }
+
+    pub fn get_en_passant(&self) -> Option<Squares> {
+        self.en_passant
+    }
 }
 
 #[rustfmt::skip]
@@ -60,6 +104,41 @@ pub enum Squares {
 impl Squares {
     pub fn from_rank_file(rank: u8, file: u8) -> Squares {
         let index = (rank * 8 + file) as usize;
+        Squares::from_repr(index as u8).unwrap()
+    }
+
+    pub fn to_index(&self) -> usize {
+        *self as usize
+    }
+    pub fn rank(&self) -> u8 {
+        (self.to_index() / 8) as u8
+    }
+
+    pub fn file(&self) -> u8 {
+        (self.to_index() % 8) as u8
+    }
+}
+
+impl Add<u8> for Squares {
+    type Output = Squares;
+
+    fn add(self, rhs: u8) -> Self::Output {
+        let index = self.to_index() + rhs as usize;
+        if index > 63 {
+            panic!("Index out of bounds");
+        }
+        Squares::from_repr(index as u8).unwrap()
+    }
+}
+
+impl Sub<u8> for Squares {
+    type Output = Squares;
+
+    fn sub(self, rhs: u8) -> Self::Output {
+        let index = self.to_index() - rhs as usize;
+        if index > 63 {
+            panic!("Index out of bounds");
+        }
         Squares::from_repr(index as u8).unwrap()
     }
 }

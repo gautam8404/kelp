@@ -1,6 +1,7 @@
 use super::bitboard::BitBoard;
 use super::generate_attacks::{generate_bishop_mask, generate_rook_mask};
 use super::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
+use log::info;
 
 pub const ROOK_MAGICS: [u64; 64] = [
     0x8a80104000800020,
@@ -105,7 +106,7 @@ pub const BISHOP_MAGICS: [u64; 64] = [
     0x8004200962a00220,
     0x8422100208500202,
     0x2000402200300c08,
-    0x8646020080080080,
+    0x4410054830041u64,
     0x80020a0200100808,
     0x2010004880111000,
     0x623000a080011400,
@@ -149,33 +150,35 @@ pub struct MagicTable {
     pub bishop: [Magic; 64],
 }
 
-pub fn generate_magic_table() -> MagicTable {
-    let mut rook_table = [Magic {
-        mask: BitBoard::empty(),
-        magic: BitBoard::empty(),
-        shift: 0,
-    }; 64];
-    let mut bishop_table = [Magic {
-        mask: BitBoard::empty(),
-        magic: BitBoard::empty(),
-        shift: 0,
-    }; 64];
-
-    for i in 0..64 {
-        rook_table[i] = Magic {
-            mask: generate_rook_mask(i),
-            magic: BitBoard::from(ROOK_MAGICS[i]),
-            shift: 64 - ROOK_RELEVANT_BITS[i],
-        };
-        bishop_table[i] = Magic {
-            mask: generate_bishop_mask(i),
-            magic: BitBoard::from(BISHOP_MAGICS[i]),
-            shift: 64 - BISHOP_RELEVANT_BITS[i],
-        };
+impl MagicTable {
+    pub fn new() -> MagicTable {
+        MagicTable {
+            rook: [Magic {
+                mask: BitBoard::empty(),
+                magic: BitBoard::empty(),
+                shift: 0,
+            }; 64],
+            bishop: [Magic {
+                mask: BitBoard::empty(),
+                magic: BitBoard::empty(),
+                shift: 0,
+            }; 64],
+        }
     }
 
-    MagicTable {
-        rook: rook_table,
-        bishop: bishop_table,
+    pub fn generate_magic_table(&mut self) {
+        for i in 0..64 {
+            self.rook[i] = Magic {
+                mask: generate_rook_mask(i),
+                magic: BitBoard::from(ROOK_MAGICS[i]),
+                shift: 64 - ROOK_RELEVANT_BITS[i],
+            };
+            self.bishop[i] = Magic {
+                mask: generate_bishop_mask(i),
+                magic: BitBoard::from(BISHOP_MAGICS[i]),
+                shift: 64 - BISHOP_RELEVANT_BITS[i],
+            };
+        }
+        info!("Magic tables generated");
     }
 }

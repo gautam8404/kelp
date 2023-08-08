@@ -3,7 +3,7 @@ use super::generate_attacks::*;
 use super::magics::*;
 use super::{BISHOP_RELEVANT_BITS, ROOK_RELEVANT_BITS};
 use crate::kelp::board::piece::Color;
-use std::process::id;
+use log::info;
 
 pub struct LookupTable {
     pawn_attacks: [[BitBoard; 64]; 2],
@@ -20,8 +20,10 @@ pub struct LookupTable {
 
 impl LookupTable {
     pub fn populate(&mut self) {
+        self.magic_table.generate_magic_table();
         self.init_leaper_pieces();
         self.init_slider_pieces();
+        info!("Lookup table populated");
     }
 
     fn init_leaper_pieces(&mut self) {
@@ -31,6 +33,7 @@ impl LookupTable {
             self.knight_attacks[i] = generate_knight_attacks(i);
             self.king_attacks[i] = generate_king_attacks(i);
         }
+        info!("Leaper pieces initialized")
     }
 
     fn init_slider_pieces(&mut self) {
@@ -58,6 +61,7 @@ impl LookupTable {
                 self.rook_attacks[sq][magic_index as usize] = generate_rook_attacks(sq, occupancy);
             }
         }
+        info!("Slider pieces initialized")
     }
 
     pub fn new() -> LookupTable {
@@ -69,7 +73,7 @@ impl LookupTable {
             rook_masks: [BitBoard(0); 64],
             bishop_attacks: [[BitBoard(0); 1024]; 64],
             rook_attacks: [[BitBoard(0); 4096]; 64],
-            magic_table: generate_magic_table(),
+            magic_table: MagicTable::new(),
         }
     }
 
