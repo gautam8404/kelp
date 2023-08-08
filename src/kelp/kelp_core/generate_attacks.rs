@@ -89,17 +89,16 @@ pub fn generate_bishop_mask(square: usize) -> BitBoard {
     for (rank, file) in (t_rank + 1..7).zip(t_file + 1..7) {
         mask |= BitBoard(1u64 << (rank * 8 + file));
     }
-    for (rank, file) in (t_rank + 1..7).zip((1..=t_file).rev()) {
+    for (rank, file) in (t_rank + 1..7).zip((1..t_file).rev()) {
         mask |= BitBoard(1u64 << (rank * 8 + file));
     }
-    for (rank, file) in (1..=t_rank).rev().zip(t_file + 1..7) {
+    for (rank, file) in (1..t_rank).rev().zip(t_file + 1..7) {
         mask |= BitBoard(1u64 << (rank * 8 + file));
     }
-    for (rank, file) in (1..=t_rank).rev().zip((1..=t_file).rev()) {
+    for (rank, file) in (1..t_rank).rev().zip((1..t_file).rev()) {
         mask |= BitBoard(1u64 << (rank * 8 + file));
     }
 
-    mask.clear_bit(square as u8);
     mask
 }
 

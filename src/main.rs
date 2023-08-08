@@ -11,6 +11,7 @@ use kelp::Squares::{self, *};
 use kelp::{BLACK_OCCUPIED, OCCUPIED, WHITE_OCCUPIED};
 
 use kelp::board::{board::Board, fen::Fen};
+
 fn main() {
     pretty_env_logger::init();
     let starring_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR \
@@ -38,8 +39,6 @@ fn main() {
     let movgen = MovGen { table: &table };
     movgen.print_attacked(Color::White, &board);
 
-
-    println!("{}", table.get_bishop_attacks(Squares::D5 as u8, BitBoard::empty()));
 
     // print!("{}", board.get_piece_at(Squares::E6).unwrap());
 }
