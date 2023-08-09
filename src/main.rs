@@ -13,6 +13,7 @@ use kelp::Squares::{self, *};
 use kelp::{BLACK_OCCUPIED, OCCUPIED, WHITE_OCCUPIED};
 
 use kelp::board::{board::Board, fen::Fen};
+use crate::kelp::board::piece::BoardPiece::BlackQueen;
 
 fn main() {
     env_logger::init();
@@ -31,22 +32,31 @@ fn main() {
         return;
     }
     let mut board = board.unwrap();
-    board.replace_piece(BoardPiece::BlackRook, G6);
+    board.replace_piece(BoardPiece::BlackRook, E2);
     println!("{}", board.get_piece(G6).unwrap());
     println!("{}", board);
 
     let mut movgen = MovGen::new(&table);
 
     movgen.print_attacked(Color::White, &board);
-    println!("{}\n", board);
+    println!("{}\n", board.get_piece_occ(BlackQueen));
     println!("{:?}", board);
     // let time = std::time::Instant::now();
+    movgen.generate_moves(Color::Black, &board);
+    let mut l1 = movgen.get_move_list();
     movgen.generate_moves(Color::White, &board);
+    let mut l2 = movgen.get_move_list();
     // println!("Time: {:?}", time.elapsed());
     for i in movgen.move_list.iter() {
         print!("{} ", i);
         println!("{:?}", i);
     }
+
+    println!("mv length: {}", movgen.move_list.len());
+    println!("mv length: {}", l1.len());
+    println!("mv length: {}", l2.len());
+    l1.extend(&mut l2);
+    println!("mv length: {}", l1.len());
 
 
 

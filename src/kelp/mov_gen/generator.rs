@@ -18,6 +18,22 @@ pub struct MovGen<'a> {
     pub move_list: MoveList, // TODO: Make this private
 }
 
+// setters and getters
+impl<'a> MovGen<'a> {
+    pub fn get_move_list(&self) -> MoveList {
+        self.move_list.clone()
+    }
+    
+    pub fn get_move_list_ref(&self) -> &MoveList {
+        &self.move_list
+    }
+
+    pub fn clear_move_list(&mut self) {
+        self.move_list.clear();
+    }
+}
+
+// Move generation
 impl<'a> MovGen<'a> {
     pub fn new(table: &'a LookupTable) -> MovGen<'a> {
         info!("Initializing move generator");
@@ -386,6 +402,48 @@ impl<'a> MovGen<'a> {
         }
     }
 
+    pub fn generate_king_moves(&mut self, side: Color, board: &Board) {
+        let king = match side {
+            White => WhiteKing,
+            Black => BlackKing,
+        };
+        let king_bb = board.get_piece_occ(king);
+
+        for sq in king_bb {
+            if sq > 63 {
+                continue;
+            }
+            let source = Squares::from_repr(sq).unwrap();
+            let attacks = self.table.get_king_attacks(sq);
+
+            for atk in attacks {
+                let target = Squares::from_repr(atk).unwrap();
+                let piece = board.get_piece(target);
+                if piece.is_some() {
+                    if piece.unwrap().get_color() != side {
+                        self.move_list.push(Move::new(
+                            source,
+                            target,
+                            king,
+                            piece,
+                            MoveType::Normal,
+                            GenType::Capture,
+                        ));
+                    }
+                } else {
+                    self.move_list.push(Move::new(
+                        source,
+                        target,
+                        king,
+                        None,
+                        MoveType::Normal,
+                        GenType::Quiet,
+                    ));
+                }
+            }
+        }
+    }
+
     fn generate_knight_moves(&mut self, side: Color, board: &Board) {
         let knight = match side {
             White => WhiteKnight,
@@ -428,11 +486,142 @@ impl<'a> MovGen<'a> {
             }
         }
     }
+
+    pub fn generate_bishop_moves(&mut self, side: Color, board: &Board) {
+        let bishop = match side {
+            White => WhiteBishop,
+            Black => BlackBishop,
+        };
+        let bishop_bb = board.get_piece_occ(bishop);
+
+        for sq in bishop_bb {
+            if sq > 63 {
+                continue;
+            }
+            let source = Squares::from_repr(sq).unwrap();
+            let attacks = self.table.get_bishop_attacks(sq, board.get_occ());
+
+            for atk in attacks {
+                let target = Squares::from_repr(atk).unwrap();
+                let piece = board.get_piece(target);
+                if piece.is_some() {
+                    if piece.unwrap().get_color() != side {
+                        self.move_list.push(Move::new(
+                            source,
+                            target,
+                            bishop,
+                            piece,
+                            MoveType::Normal,
+                            GenType::Capture,
+                        ));
+                    }
+                } else {
+                    self.move_list.push(Move::new(
+                        source,
+                        target,
+                        bishop,
+                        None,
+                        MoveType::Normal,
+                        GenType::Quiet,
+                    ));
+                }
+            }
+        }
+    }
+
+    pub fn generate_rook_moves(&mut self, side: Color, board: &Board) {
+        let rook = match side {
+            White => WhiteRook,
+            Black => BlackRook,
+        };
+        let rook_bb = board.get_piece_occ(rook);
+
+        for sq in rook_bb {
+            if sq > 63 {
+                continue;
+            }
+            let source = Squares::from_repr(sq).unwrap();
+            let attacks = self.table.get_rook_attacks(sq, board.get_occ());
+
+            for atk in attacks {
+                let target = Squares::from_repr(atk).unwrap();
+                let piece = board.get_piece(target);
+                if piece.is_some() {
+                    if piece.unwrap().get_color() != side {
+                        self.move_list.push(Move::new(
+                            source,
+                            target,
+                            rook,
+                            piece,
+                            MoveType::Normal,
+                            GenType::Capture,
+                        ));
+                    }
+                } else {
+                    self.move_list.push(Move::new(
+                        source,
+                        target,
+                        rook,
+                        None,
+                        MoveType::Normal,
+                        GenType::Quiet,
+                    ));
+                }
+            }
+        }
+    }
+
+    pub fn generate_queen_moves(&mut self, side: Color, board: &Board) {
+        let queen = match side {
+            White => WhiteQueen,
+            Black => BlackQueen,
+        };
+        let queen_bb = board.get_piece_occ(queen);
+
+        for sq in queen_bb {
+            if sq > 63 {
+                continue;
+            }
+            let source = Squares::from_repr(sq).unwrap();
+            let attacks = self.table.get_queen_attacks(sq, board.get_occ());
+
+            for atk in attacks {
+                let target = Squares::from_repr(atk).unwrap();
+                let piece = board.get_piece(target);
+                if piece.is_some() {
+                    if piece.unwrap().get_color() != side {
+                        self.move_list.push(Move::new(
+                            source,
+                            target,
+                            queen,
+                            piece,
+                            MoveType::Normal,
+                            GenType::Capture,
+                        ));
+                    }
+                } else {
+                    self.move_list.push(Move::new(
+                        source,
+                        target,
+                        queen,
+                        None,
+                        MoveType::Normal,
+                        GenType::Quiet,
+                    ));
+                }
+            }
+        }
+    }
     pub fn generate_moves(&mut self, side: Color, board: &Board) {
         self.move_list.clear();
         self.generate_pawn_moves(side, board);
         self.generate_castling_moves(side, board);
+        self.generate_king_moves(side, board);
         self.generate_knight_moves(side, board);
+        self.generate_bishop_moves(side, board);
+        self.generate_rook_moves(side, board);
+        self.generate_queen_moves(side, board);
+        self.generate_queen_moves(side, board);
     }
 
     pub fn print_attacked(&self, side: Color, board: &Board) {

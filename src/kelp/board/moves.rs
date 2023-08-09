@@ -217,4 +217,8 @@ impl MoveList {
     pub fn iter(&self) -> std::slice::Iter<Move> {
         self.0.iter()
     }
+
+    pub fn extend(&mut self, other: &mut MoveList) {
+        self.0.append(&mut other.0);
+    }
 }
