@@ -1,5 +1,5 @@
 mod kelp;
-extern crate pretty_env_logger;
+extern crate env_logger;
 #[macro_use]
 extern crate log;
 
@@ -15,7 +15,7 @@ use kelp::{BLACK_OCCUPIED, OCCUPIED, WHITE_OCCUPIED};
 use kelp::board::{board::Board, fen::Fen};
 
 fn main() {
-    pretty_env_logger::init();
+    env_logger::init();
     let starring_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR \
     b KQkq - 0 1";
     let fein = "8/8/4R3/3B4/8/8/8/8 w - - 0 1";
@@ -31,13 +31,15 @@ fn main() {
         return;
     }
     let mut board = board.unwrap();
+    // board.add_piece(BoardPiece::BlackRook, D1);
 
     let mut movgen = MovGen::new(&table);
+
     movgen.print_attacked(Color::White, &board);
     println!("{}\n", board);
     println!("{:?}", board);
     let time = std::time::Instant::now();
-    movgen.generate_moves(Color::White, &board);
+    movgen.generate_moves(Color::Black, &board);
     println!("Time: {:?}", time.elapsed());
     for i in movgen.move_list.iter() {
         print!("{} ", i);
@@ -45,6 +47,8 @@ fn main() {
     }
 
     println!("{}", Squares::A8.rank());
+
+
 
 
 

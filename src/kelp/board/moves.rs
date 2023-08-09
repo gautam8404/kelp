@@ -104,7 +104,6 @@ impl Display for Move {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.move_type {
             MoveType::EnPassant => write!(f, "{}{}e.p.", self.from, self.to),
-            MoveType::Castle(castle) => write!(f, "{}{}", self.piece, castle),
             MoveType::Promotion(Some(promotion)) => {
                 write!(f, "{}{}{}", self.from, self.to, promotion)
             }

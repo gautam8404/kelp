@@ -1,4 +1,5 @@
 use crate::kelp::board::board::Board;
+use crate::kelp::board::moves::{CastlingRights, GenType};
 use crate::kelp::kelp_core::bitboard::BitBoard;
 use crate::kelp::kelp_core::lookup_table::LookupTable;
 use crate::kelp::{
@@ -11,7 +12,6 @@ use crate::kelp::{
 };
 use log::info;
 use strum::IntoEnumIterator;
-use crate::kelp::board::moves::GenType;
 
 pub struct MovGen<'a> {
     pub table: &'a LookupTable,
@@ -30,28 +30,33 @@ impl<'a> MovGen<'a> {
     pub fn is_attacked(&self, square: Squares, color: Color, board: &Board) -> bool {
         match color {
             White => {
+                // is attacked by white pawn
                 if (self.table.get_pawn_attacks(Black, square as u8)
                     & board.get_piece_occ(WhitePawn))
                     != BitBoard::empty()
                 {
                     return true;
                 }
+                // is attacked by white knight
                 if (self.table.get_knight_attacks(square as u8) & board.get_piece_occ(WhiteKnight))
                     != BitBoard::empty()
                 {
                     return true;
                 }
+                // is attacked by white king
                 if (self.table.get_king_attacks(square as u8) & board.get_piece_occ(WhiteKing))
                     != BitBoard::empty()
                 {
                     return true;
                 }
+                // is attacked by white bishop or queen
                 if (self.table.get_bishop_attacks(square as u8, board.get_occ())
                     & (board.get_piece_occ(WhiteBishop) | board.get_piece_occ(WhiteQueen)))
                     != BitBoard::empty()
                 {
                     return true;
                 }
+                // is attacked by white rook or queen
                 if (self.table.get_rook_attacks(square as u8, board.get_occ())
                     & (board.get_piece_occ(WhiteRook) | board.get_piece_occ(WhiteQueen)))
                     != BitBoard::empty()
@@ -60,28 +65,33 @@ impl<'a> MovGen<'a> {
                 }
             }
             Black => {
+                // is attacked by black pawn
                 if (self.table.get_pawn_attacks(White, square as u8)
                     & board.get_piece_occ(BlackPawn))
                     != BitBoard::empty()
                 {
                     return true;
                 }
+                // is attacked by black knight
                 if (self.table.get_knight_attacks(square as u8) & board.get_piece_occ(BlackKnight))
                     != BitBoard::empty()
                 {
                     return true;
                 }
+                // is attacked by black king
                 if (self.table.get_king_attacks(square as u8) & board.get_piece_occ(BlackKing))
                     != BitBoard::empty()
                 {
                     return true;
                 }
+                // is attacked by black bishop or queen
                 if (self.table.get_bishop_attacks(square as u8, board.get_occ())
                     & (board.get_piece_occ(BlackBishop) | board.get_piece_occ(BlackQueen)))
                     != BitBoard::empty()
                 {
                     return true;
                 }
+                // is attacked by black rook or queen
                 if (self.table.get_rook_attacks(square as u8, board.get_occ())
                     & (board.get_piece_occ(BlackRook) | board.get_piece_occ(BlackQueen)))
                     != BitBoard::empty()
@@ -91,9 +101,6 @@ impl<'a> MovGen<'a> {
             }
         }
         false
-    }
-    pub fn getc(&mut self) {
-        todo!()
     }
 
     fn generate_pawn_moves(&mut self, color: Color, board: &Board) {
@@ -114,7 +121,14 @@ impl<'a> MovGen<'a> {
                     let square = Squares::from_repr(sq).unwrap();
 
                     // Generate normal pawn push
-                    let mut mv = Move::new(square, square + 8, WhitePawn, None, MoveType::Normal, GenType::Quiet);
+                    let mut mv = Move::new(
+                        square,
+                        square + 8,
+                        WhitePawn,
+                        None,
+                        MoveType::Normal,
+                        GenType::Quiet,
+                    );
                     moves.push(mv);
 
                     // Generate double pawn push
@@ -205,7 +219,14 @@ impl<'a> MovGen<'a> {
                     let square = Squares::from_repr(sq).unwrap();
 
                     // Generate normal pawn push
-                    let mut mv = Move::new(square, square - 8, BlackPawn, None, MoveType::Normal, GenType::Quiet);
+                    let mut mv = Move::new(
+                        square,
+                        square - 8,
+                        BlackPawn,
+                        None,
+                        MoveType::Normal,
+                        GenType::Quiet,
+                    );
                     moves.push(mv);
 
                     // Generate double pawn push
@@ -285,9 +306,89 @@ impl<'a> MovGen<'a> {
             }
         };
     }
-    pub fn generate_moves(&mut self, color: Color, board: &Board)  {
+
+    fn generate_castling_moves(&mut self, color: Color, board: &Board) {
+        let castle = board.info.castle;
+
+        match color {
+            White => {
+                // Generate King Side Castle
+                if castle.can_castle_king_side(White)
+                    && !board.get_occ().get_bit(Squares::F1 as u8)
+                    && !board.get_occ().get_bit(Squares::G1 as u8)
+                    && !self.is_attacked(Squares::E1, !color, board)
+                    && !self.is_attacked(Squares::F1, !color, board)
+                {
+                    self.move_list.push(Move::new(
+                        Squares::E1,
+                        Squares::G1,
+                        WhiteKing,
+                        None,
+                        MoveType::Castle(CastlingRights::WhiteKingSide),
+                        GenType::Quiet,
+                    ));
+                }
+
+                // Generate Queen Side Castle
+                if castle.can_castle_queen_side(White)
+                    && !board.get_occ().get_bit(Squares::D1 as u8)
+                    && !board.get_occ().get_bit(Squares::C1 as u8)
+                    && !board.get_occ().get_bit(Squares::B1 as u8)
+                    && !self.is_attacked(Squares::E1, !color, board)
+                    && !self.is_attacked(Squares::D1, !color, board)
+                {
+                    self.move_list.push(Move::new(
+                        Squares::E1,
+                        Squares::C1,
+                        WhiteKing,
+                        None,
+                        MoveType::Castle(CastlingRights::WhiteQueenSide),
+                        GenType::Quiet,
+                    ));
+                }
+            }
+            Black => {
+                // Generate King Side Castle
+                if castle.can_castle_king_side(Black)
+                    && !board.get_occ().get_bit(Squares::F8 as u8)
+                    && !board.get_occ().get_bit(Squares::G8 as u8)
+                    && !self.is_attacked(Squares::E8, !color, board)
+                    && !self.is_attacked(Squares::F8, !color, board)
+                {
+                    self.move_list.push(Move::new(
+                        Squares::E8,
+                        Squares::G8,
+                        BlackKing,
+                        None,
+                        MoveType::Castle(CastlingRights::BlackKingSide),
+                        GenType::Quiet,
+                    ));
+                }
+
+                // Generate Queen Side Castle
+                if castle.can_castle_queen_side(Black)
+                    && !board.get_occ().get_bit(Squares::D8 as u8)
+                    && !board.get_occ().get_bit(Squares::C8 as u8)
+                    && !board.get_occ().get_bit(Squares::B8 as u8)
+                    && !self.is_attacked(Squares::E8, !color, board)
+                    && !self.is_attacked(Squares::D8, !color, board)
+                {
+                    self.move_list.push(Move::new(
+                        Squares::E8,
+                        Squares::C8,
+                        BlackKing,
+                        None,
+                        MoveType::Castle(CastlingRights::BlackQueenSide),
+                        GenType::Quiet,
+                    ));
+                }
+            }
+        }
+    }
+    pub fn generate_moves(&mut self, color: Color, board: &Board) {
         self.move_list.clear();
         self.generate_pawn_moves(color, board);
+        self.generate_castling_moves(color, board);
     }
 
     pub fn print_attacked(&self, color: Color, board: &Board) {
