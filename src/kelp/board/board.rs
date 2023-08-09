@@ -30,6 +30,12 @@ impl Board {
         self.bitboards[piece as usize].clear_bit(square as u8);
     }
 
+    pub fn replace_piece(&mut self, piece: BoardPiece, square: Squares) {
+        for p in BoardPiece::iter() {
+            self.remove_piece(p, square);
+        }
+        self.add_piece(piece, square);
+    }
     pub fn add_piece(&mut self, piece: BoardPiece, square: Squares) {
         self.add_to_bb(piece, square);
         // self.hash ^= crate::kelp::zobrist::get_piece_hash(piece, square); TODO

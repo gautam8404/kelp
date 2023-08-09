@@ -31,22 +31,23 @@ fn main() {
         return;
     }
     let mut board = board.unwrap();
-    // board.add_piece(BoardPiece::BlackRook, D1);
+    board.replace_piece(BoardPiece::BlackRook, G6);
+    println!("{}", board.get_piece(G6).unwrap());
+    println!("{}", board);
 
     let mut movgen = MovGen::new(&table);
 
     movgen.print_attacked(Color::White, &board);
     println!("{}\n", board);
     println!("{:?}", board);
-    let time = std::time::Instant::now();
-    movgen.generate_moves(Color::Black, &board);
-    println!("Time: {:?}", time.elapsed());
+    // let time = std::time::Instant::now();
+    movgen.generate_moves(Color::White, &board);
+    // println!("Time: {:?}", time.elapsed());
     for i in movgen.move_list.iter() {
         print!("{} ", i);
         println!("{:?}", i);
     }
 
-    println!("{}", Squares::A8.rank());
 
 
 

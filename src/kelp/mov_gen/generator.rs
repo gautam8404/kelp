@@ -103,8 +103,8 @@ impl<'a> MovGen<'a> {
         false
     }
 
-    fn generate_pawn_moves(&mut self, color: Color, board: &Board) {
-        match color {
+    fn generate_pawn_moves(&mut self, side: Color, board: &Board) {
+        match side {
             White => {
                 let bitboard = board.get_piece_occ(WhitePawn);
                 let moves = &mut self.move_list;
@@ -161,7 +161,7 @@ impl<'a> MovGen<'a> {
                         let piece = board.get_piece(target);
                         if piece.is_some() {
                             let piece = piece.unwrap();
-                            if piece.get_color() != color {
+                            if piece.get_color() != side {
                                 mv = Move::new(
                                     square,
                                     target,
@@ -196,7 +196,7 @@ impl<'a> MovGen<'a> {
                                 en_passant,
                                 WhitePawn,
                                 Some(BlackPawn),
-                                MoveType::EnPassant,
+                                MoveType::EnPassant(Some(en_passant)),
                                 GenType::Capture,
                             );
                             moves.push(mv);
@@ -261,7 +261,7 @@ impl<'a> MovGen<'a> {
                         let piece = board.get_piece(target);
                         if piece.is_some() {
                             let piece = piece.unwrap();
-                            if piece.get_color() != color {
+                            if piece.get_color() != side {
                                 mv = Move::new(
                                     square,
                                     target,
@@ -296,7 +296,7 @@ impl<'a> MovGen<'a> {
                                 en_passant,
                                 BlackPawn,
                                 Some(WhitePawn),
-                                MoveType::EnPassant,
+                                MoveType::EnPassant(Some(en_passant)),
                                 GenType::Capture,
                             );
                             moves.push(mv);
@@ -307,17 +307,17 @@ impl<'a> MovGen<'a> {
         };
     }
 
-    fn generate_castling_moves(&mut self, color: Color, board: &Board) {
+    fn generate_castling_moves(&mut self, side: Color, board: &Board) {
         let castle = board.info.castle;
 
-        match color {
+        match side {
             White => {
                 // Generate King Side Castle
                 if castle.can_castle_king_side(White)
                     && !board.get_occ().get_bit(Squares::F1 as u8)
                     && !board.get_occ().get_bit(Squares::G1 as u8)
-                    && !self.is_attacked(Squares::E1, !color, board)
-                    && !self.is_attacked(Squares::F1, !color, board)
+                    && !self.is_attacked(Squares::E1, !side, board)
+                    && !self.is_attacked(Squares::F1, !side, board)
                 {
                     self.move_list.push(Move::new(
                         Squares::E1,
@@ -334,8 +334,8 @@ impl<'a> MovGen<'a> {
                     && !board.get_occ().get_bit(Squares::D1 as u8)
                     && !board.get_occ().get_bit(Squares::C1 as u8)
                     && !board.get_occ().get_bit(Squares::B1 as u8)
-                    && !self.is_attacked(Squares::E1, !color, board)
-                    && !self.is_attacked(Squares::D1, !color, board)
+                    && !self.is_attacked(Squares::E1, !side, board)
+                    && !self.is_attacked(Squares::D1, !side, board)
                 {
                     self.move_list.push(Move::new(
                         Squares::E1,
@@ -352,8 +352,8 @@ impl<'a> MovGen<'a> {
                 if castle.can_castle_king_side(Black)
                     && !board.get_occ().get_bit(Squares::F8 as u8)
                     && !board.get_occ().get_bit(Squares::G8 as u8)
-                    && !self.is_attacked(Squares::E8, !color, board)
-                    && !self.is_attacked(Squares::F8, !color, board)
+                    && !self.is_attacked(Squares::E8, !side, board)
+                    && !self.is_attacked(Squares::F8, !side, board)
                 {
                     self.move_list.push(Move::new(
                         Squares::E8,
@@ -370,8 +370,8 @@ impl<'a> MovGen<'a> {
                     && !board.get_occ().get_bit(Squares::D8 as u8)
                     && !board.get_occ().get_bit(Squares::C8 as u8)
                     && !board.get_occ().get_bit(Squares::B8 as u8)
-                    && !self.is_attacked(Squares::E8, !color, board)
-                    && !self.is_attacked(Squares::D8, !color, board)
+                    && !self.is_attacked(Squares::E8, !side, board)
+                    && !self.is_attacked(Squares::D8, !side, board)
                 {
                     self.move_list.push(Move::new(
                         Squares::E8,
@@ -385,16 +385,60 @@ impl<'a> MovGen<'a> {
             }
         }
     }
-    pub fn generate_moves(&mut self, color: Color, board: &Board) {
+
+    fn generate_knight_moves(&mut self, side: Color, board: &Board) {
+        let knight = match side {
+            White => WhiteKnight,
+            Black => BlackKnight,
+        };
+        let knigt_bb = board.get_piece_occ(knight);
+
+        for sq in knigt_bb {
+            if sq > 63 {
+                continue;
+            }
+            let source = Squares::from_repr(sq).unwrap();
+            let attacks = self.table.get_knight_attacks(sq);
+
+            for atk in attacks {
+                let target = Squares::from_repr(atk).unwrap();
+                let piece = board.get_piece(target);
+                if piece.is_some() {
+                    if piece.unwrap().get_color() != side {
+                        self.move_list.push(Move::new(
+                            source,
+                            target,
+                            knight,
+                            piece,
+                            MoveType::Normal,
+                            GenType::Capture,
+                        ));
+                    }
+                } else {
+                    self.move_list.push(Move::new(
+                        source,
+                        target,
+                        knight,
+                        None,
+                        MoveType::Normal,
+                        GenType::Quiet,
+                    ));
+                }
+
+            }
+        }
+    }
+    pub fn generate_moves(&mut self, side: Color, board: &Board) {
         self.move_list.clear();
-        self.generate_pawn_moves(color, board);
-        self.generate_castling_moves(color, board);
+        self.generate_pawn_moves(side, board);
+        self.generate_castling_moves(side, board);
+        self.generate_knight_moves(side, board);
     }
 
-    pub fn print_attacked(&self, color: Color, board: &Board) {
+    pub fn print_attacked(&self, side: Color, board: &Board) {
         for rank in (0..8).rev() {
             for file in 0..8 {
-                if self.is_attacked(Squares::from_rank_file(rank, file), color, board) {
+                if self.is_attacked(Squares::from_rank_file(rank, file), side, board) {
                     print!("  1");
                 } else {
                     print!("  0");

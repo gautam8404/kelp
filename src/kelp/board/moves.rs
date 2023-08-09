@@ -79,7 +79,7 @@ impl Castle {
 pub enum MoveType {
     Normal,
     DoublePawnPush,
-    EnPassant,
+    EnPassant(Option<Squares>),
     Castle(CastlingRights),
     Promotion(Option<BoardPiece>),
 }
@@ -103,7 +103,7 @@ pub struct Move {
 impl Display for Move {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.move_type {
-            MoveType::EnPassant => write!(f, "{}{}e.p.", self.from, self.to),
+            MoveType::EnPassant(ep_sq) => write!(f, "{}{}e.p.", self.from, self.to),
             MoveType::Promotion(Some(promotion)) => {
                 write!(f, "{}{}{}", self.from, self.to, promotion)
             }
@@ -170,7 +170,7 @@ impl Move {
     }
 
     pub fn is_en_passant(&self) -> bool {
-        matches!(self.move_type, MoveType::EnPassant)
+        matches!(self.move_type, MoveType::EnPassant(_))
     }
 
     pub fn is_castle(&self) -> bool {
