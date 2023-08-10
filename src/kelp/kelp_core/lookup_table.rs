@@ -12,7 +12,7 @@ pub struct LookupTable {
 
     bishop_masks: [BitBoard; 64],
     rook_masks: [BitBoard; 64],
-    bishop_attacks: [[BitBoard; 1024]; 64],
+    bishop_attacks: [[BitBoard; 512]; 64],
     rook_attacks: [[BitBoard; 4096]; 64],
 
     magic_table: MagicTable,
@@ -71,7 +71,7 @@ impl LookupTable {
             king_attacks: [BitBoard(0); 64],
             bishop_masks: [BitBoard(0); 64],
             rook_masks: [BitBoard(0); 64],
-            bishop_attacks: [[BitBoard(0); 1024]; 64],
+            bishop_attacks: [[BitBoard(0); 512]; 64],
             rook_attacks: [[BitBoard(0); 4096]; 64],
             magic_table: MagicTable::new(),
         }

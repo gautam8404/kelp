@@ -14,7 +14,7 @@ use std::thread::sleep;
 
 use crate::kelp::board::piece::BoardPiece::BlackQueen;
 use kelp::board::{board::Board, fen::Fen};
-use crate::kelp::mov_gen::perft::perft;
+use crate::kelp::mov_gen::perft::*;
 
 fn main() {
     env_logger::init();
@@ -47,7 +47,7 @@ fn main() {
     // println!("{}",  board.is_king_checked(Color::White, & movgen));
     // // let time = std::time::Instant::now();
     // movgen.generate_moves(Color::Black, &board);
-    movgen.generate_moves(Color::White, &board);
+    // movgen.generate_moves( &board);
     // // println!("Time: {:?}", time.elapsed());
     // for i in movgen.move_list.iter() {
     //     print!("{} ", i);
@@ -74,20 +74,13 @@ fn main() {
     //     board.unmake_move(a.unwrap());
     // }
 
-    movgen.generate_moves(Color::White, &board);
+    movgen.generate_moves( &board);
     println!("mv length: {}", movgen.move_list.len());
-    use kelp::mov_gen::perft::*;
+    // use kelp::mov_gen::perft::*;
     let mut pft = Perft::default();
     let time = std::time::Instant::now();
-    println!("Perft 5");
-    perft(5 , &mut board, &mut movgen, &mut pft);
-    println!("Time: {:?}", time.elapsed());
-    println!("Nodes: {}", pft.nodes);
-    println!("Captures: {}", pft.captures);
-    println!("En Passant: {}", pft.en_passants);
-    println!("Castles: {}", pft.castles);
-    println!("Promotions: {}", pft.promotions);
-    println!("Checks: {}", pft.checks);
+    let mut nodes = 0;
+    perft_test(5, &mut board, &mut movgen, &mut nodes);
 
 
     // print!("{}", board.get_piece_at(Squares::E6).unwrap());

@@ -1,7 +1,9 @@
 use crate::kelp::board::board::Board;
 use crate::kelp::board::moves::MoveType;
+use crate::kelp::kelp_core::lookup_table::LookupTable;
 use crate::kelp::mov_gen::generator::MovGen;
 
+#[derive(Debug, Default)]
 pub struct Perft {
     pub nodes: u64,
     pub captures: u64,
@@ -9,21 +11,10 @@ pub struct Perft {
     pub castles: u64,
     pub promotions: u64,
     pub checks: u64, // TODO: Add checks
-    // checkmates: u64, //TODO: Add checkmate
+    checkmates: u64, //TODO: Add checkmate
 }
 
-impl Default for Perft {
-    fn default() -> Self {
-        Perft {
-            nodes: 0,
-            captures: 0,
-            en_passants: 0,
-            castles: 0,
-            promotions: 0,
-            checks: 0,
-        }
-    }
-}
+
 
 impl Perft {
     pub fn check(
@@ -93,60 +84,113 @@ impl Perft {
 //         board.unmake_move(a.unwrap());
 //     }
 // }
-pub fn perft(depth: u16, board: &mut Board, gen: &mut MovGen, pft: &mut Perft) {
+// pub fn perft(depth: u16, board: &mut Board, gen: &mut MovGen, pft: & mut Perft) -> u32 {
+//     if depth == 0 {
+//         pft.nodes += 1;
+//         return 1;
+//     }
+//     use MoveType::*;
+//
+//     let side = board.get_side_to_move();
+//     gen.generate_moves( board);
+//     let moves_list = gen.move_list.clone();
+//
+//     let mut nodes = 0;
+//     let mut checkmates = 0;
+//
+//     for &mov in moves_list.iter() {
+//         let game_state = board.get_game_state();
+//         let a = board.simple_make_move(mov, false);
+//         // if a.is_none() {
+//         //     continue;
+//         // }
+//
+//         if !board.is_king_checked(side, gen) {
+//             if mov.is_capture() {
+//                 pft.captures += 1;
+//             }
+//             if mov.is_en_passant() {
+//                 pft.en_passants += 1;
+//             }
+//             if mov.is_castle() {
+//                 pft.castles += 1;
+//             }
+//
+//             if mov.is_promotion() {
+//                 pft.promotions += 1;
+//             }
+//             nodes += perft(depth - 1, board, gen, pft);
+//
+//         } else {
+//             pft.checks += 1;
+//         }
+//         board.simple_unmake_move(mov, game_state);
+//     }
+//     nodes
+// }
+
+pub fn perft_driver(depth: u16, board: &mut Board, gen: &mut MovGen, nodes: &mut u64) {
     if depth == 0 {
-        pft.nodes += 1;
+        *nodes += 1;
         return;
     }
-    use MoveType::*;
 
-    let side = board.info.turn;
-    gen.generate_moves(side, board);
+    let side = board.get_side_to_move();
+    gen.generate_moves( board);
     let moves_list = gen.move_list.clone();
 
-    for &mov in moves_list.iter() {
-        let move_history = board.make_move(mov, false);
-
+    for moves in moves_list.iter() {
+        let a = board.make_move(*moves);
         if board.is_king_checked(side, gen) {
-            pft.checks += 1;
-        }
-
-        if !board.is_king_checked(side, gen) {
-            if move_history.is_none() {
+            if a.is_none() {
                 continue;
             }
-            if mov.capture.is_some() {
-                pft.captures += 1;
-            }
-            let type_move = match mov.move_type {
-                EnPassant(_) => {
-                    1
-                },
-                Castle(_) => {
-                    2
-                },
-                Promotion(_) => {
-                    3
-                },
-                _ => 4,
-            };
-            if type_move == 1 {
-                pft.en_passants += 1;
-            } else if type_move == 2 {
-                pft.castles += 1;
-            } else if type_move == 3 {
-                pft.promotions += 1;
-            }
-            perft(depth - 1, board, gen, pft);
-
-        }
-        if move_history.is_none() {
+            board.unmake_move(a.unwrap());
             continue;
         }
-        board.unmake_move(move_history.unwrap());
+
+        perft_driver(depth - 1, board, gen, nodes);
+
+        if a.is_none() {
+            continue;
+        }
+
+        board.unmake_move(a.unwrap());
     }
 }
 
+pub fn perft_test(depth: u16, board: &mut Board, gen: &mut MovGen, nodes: &mut u64) {
+    *nodes = 0;
+
+    // println!("Starting Perft Test to depth: {depth}");
+    gen.generate_moves( board);
+    let moves_list = gen.move_list.clone();
+    let time = std::time::Instant::now();
+
+    for moves in moves_list.iter() {
+        let a = board.make_move(*moves);
+        if a.is_none() {
+            continue;
+        }
+        let side = board.get_side_to_move();
+        if board.is_king_checked(side, gen) {
+            board.unmake_move(a.unwrap());
+            continue;
+        }
+
+        let cummutative_nodes = *nodes;
+
+        perft_driver(depth - 1, board, gen, nodes);
+
+        let old_nodes = *nodes - cummutative_nodes;
+
+        board.unmake_move(a.unwrap());
+
+        println!("{} {}", moves, old_nodes);
+    }
+    println!("\n{nodes}");
+    println!("Time: {:?}", time.elapsed());
+}
 
 #[cfg(test)]
 mod tests {
@@ -156,21 +200,11 @@ mod tests {
 
     #[test]
     fn start_pos_test() {
-        maybe_grow(1024 * 1024, 1024 * 1024, || {
-            let mut board = Board::parse(Fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ".to_string())).unwrap();
-            let mut table = LookupTable::new();
-            table.populate();
-            let mut gen = MovGen::new(&mut table);
-            let mut pft = Perft::default();
-            let time = std::time::Instant::now();
-            perft(5, &mut board, &mut gen, &mut pft);
-            println!("Time: {:?}", time.elapsed());
-            println!("Nodes: {}", pft.nodes);
-            println!("Captures: {}", pft.captures);
-            println!("En Passants: {}", pft.en_passants);
-            println!("Castles: {}", pft.castles);
-            println!("Promotions: {}", pft.promotions);
-            assert_eq!(1, 1); // just for now to see the output
-        })
+        let mut board = Board::parse(Fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ".to_string())).unwrap();
+        let mut table = LookupTable::new();
+        table.populate();
     }
 }
+
+
+

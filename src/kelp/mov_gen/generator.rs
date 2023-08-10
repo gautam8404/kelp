@@ -611,7 +611,8 @@ impl<'a> MovGen<'a> {
             }
         }
     }
-    pub fn generate_moves(&mut self, side: Color, board: &Board) {
+    pub fn generate_moves(&mut self, board: &Board) {
+        let side = board.get_side_to_move();
         self.move_list.clear();
         self.generate_pawn_moves(side, board);
         self.generate_castling_moves(side, board);

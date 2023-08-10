@@ -122,6 +122,10 @@ impl Board {
         }
         fen.unwrap().to_string()
     }
+
+    pub fn get_side_to_move(&self) -> Color {
+        self.info.turn
+    }
 }
 
 // Make / Unmake move and helper functions
@@ -238,18 +242,7 @@ impl Board {
         self.unmake_move(mov.unwrap());
     }
 
-        pub fn make_move(&mut self, mov: Move, only_captures: bool) -> Option<MoveHistory> {
-            if only_captures {
-                return if mov.capture.is_some() {
-                    self.make_move(mov, false)
-                } else {
-                    None
-                }
-            }
-            // if mov.piece.get_color() != self.info.turn {
-            //     log::error!("Wrong turn");
-            //     return None;
-            // }
+        pub fn make_move(&mut self, mov: Move) -> Option<MoveHistory> {
             use BoardPiece::*;
             use CastlingRights::*;
             use Color::*;
