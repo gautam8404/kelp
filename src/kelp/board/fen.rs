@@ -1,3 +1,8 @@
+use crate::kelp::board::board::Board;
+use crate::kelp::board::piece::Color;
+use crate::kelp::Squares;
+use std::fmt::Display;
+
 #[allow(clippy::enum_variant_names)]
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub enum FenParseError {
@@ -10,11 +15,82 @@ pub enum FenParseError {
     InvalidFullMoveClock(String),
 }
 
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct Fen(pub String);
 
-pub trait FenParse<I, T, E>: Sized {
-    fn parse(val: I) -> Result<T, E>;
+impl Display for Fen {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+pub trait FenParse<I, O, E>: Sized {
+    fn parse(val: I) -> Result<O, E>;
+}
+
+impl FenParse<&Board, Fen, FenParseError> for Fen {
+    fn parse(val: &Board) -> Result<Fen, FenParseError> {
+        let mut fen = String::new();
+        let mut empty = 0;
+
+        for rank in (0..8).rev() {
+            for file in 0..8 {
+                let sq = rank * 8 + file;
+                if let Some(piece) = &val.get_piece(Squares::from_repr(sq as u8).unwrap()) {
+                    if empty > 0 {
+                        fen.push_str(&empty.to_string());
+                        empty = 0;
+                    }
+                    fen.push_str(&piece.to_string());
+                } else {
+                    empty += 1;
+                }
+            }
+            if empty > 0 {
+                fen.push_str(&empty.to_string());
+                empty = 0;
+            }
+            if rank > 0 {
+                fen.push('/');
+            }
+        }
+
+        fen.push(' ');
+        fen.push_str(if val.info.turn == Color::White {
+            "w"
+        } else {
+            "b"
+        });
+        fen.push(' ');
+        let mut castle = String::new();
+        if val.info.castle.can_castle_king_side(Color::White) {
+            castle.push('K');
+        }
+        if val.info.castle.can_castle_queen_side(Color::White) {
+            castle.push('Q');
+        }
+        if val.info.castle.can_castle_king_side(Color::Black) {
+            castle.push('k');
+        }
+        if val.info.castle.can_castle_queen_side(Color::Black) {
+            castle.push('q');
+        }
+        if castle.is_empty() {
+            castle.push('-');
+        }
+        fen.push_str(&castle);
+        fen.push(' ');
+        let en_passant = val.info.en_passant;
+        if let Some(..) = en_passant {
+            fen.push_str(&en_passant.unwrap().to_string());
+        } else {
+            fen.push('-');
+        }
+        fen.push(' ');
+        fen.push_str(&val.info.halfmove_clock.to_string());
+        fen.push(' ');
+        fen.push_str(&val.info.fullmove_clock.to_string());
+        Ok(Fen(fen))
+    }
 }
 
 impl Fen {
@@ -23,8 +99,6 @@ impl Fen {
     }
 
     pub fn is_valid(&self) -> Result<(), FenParseError> {
-        /// A surface level check to see if the FEN string is valid.
-        /// This does not check if the board is valid.
         let parts: Vec<&str> = self.0.split_whitespace().collect::<Vec<&str>>();
         if parts.len() != 6 {
             return Err(FenParseError::InvalidFen(format!(

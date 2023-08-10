@@ -222,3 +222,69 @@ impl MoveList {
         self.0.append(&mut other.0);
     }
 }
+
+#[derive(Debug, Clone, Eq, PartialEq, Copy)]
+pub struct MoveHistory {
+    pub mov: Move,
+    pub castle_rights: Castle,
+    pub en_passant: Option<Squares>,
+    pub half_move_clock: u8,
+}
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct MoveArray {
+    pub moves: [Option<MoveHistory>; MAX_SIZE_MOVES_ARR],
+    pub count: usize,
+}
+
+impl MoveArray {
+    pub fn new() -> Self {
+        MoveArray {
+            moves: [None; MAX_SIZE_MOVES_ARR],
+            count: 0,
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.count = 0;
+    }
+
+    pub fn push(&mut self, m: MoveHistory) {
+        self.moves[self.count] = Some(m);
+        self.count += 1;
+    }
+
+    pub fn len(&self) -> usize {
+        self.count
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.count == 0
+    }
+
+    pub fn pop(&mut self) -> Option<MoveHistory> {
+        if self.count == 0 {
+            None
+        } else {
+            self.count -= 1;
+            self.moves[self.count]
+        }
+    }
+
+    pub fn last(&self) -> Option<&MoveHistory> {
+        if self.count == 0 {
+            None
+        } else {
+            self.moves[self.count - 1].as_ref()
+        }
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<Option<MoveHistory>> {
+        self.moves[..self.count].iter()
+    }
+
+    pub fn extend(&mut self, other: &mut MoveArray) {
+        for m in other.iter() {
+            self.push(m.unwrap());
+        }
+    }
+}

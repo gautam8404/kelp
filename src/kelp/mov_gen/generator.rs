@@ -23,7 +23,7 @@ impl<'a> MovGen<'a> {
     pub fn get_move_list(&self) -> MoveList {
         self.move_list.clone()
     }
-    
+
     pub fn get_move_list_ref(&self) -> &MoveList {
         &self.move_list
     }
@@ -482,7 +482,6 @@ impl<'a> MovGen<'a> {
                         GenType::Quiet,
                     ));
                 }
-
             }
         }
     }
@@ -620,7 +619,6 @@ impl<'a> MovGen<'a> {
         self.generate_knight_moves(side, board);
         self.generate_bishop_moves(side, board);
         self.generate_rook_moves(side, board);
-        self.generate_queen_moves(side, board);
         self.generate_queen_moves(side, board);
     }
 

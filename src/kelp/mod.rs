@@ -45,7 +45,7 @@ pub struct BoardInfo {
     pub castle: Castle,
     en_passant: Option<Squares>,
     halfmove_clock: u8,
-    fullmove_clock: u8,
+    fullmove_clock: u16,
 }
 
 impl BoardInfo {
@@ -61,7 +61,7 @@ impl BoardInfo {
         self.halfmove_clock = value;
     }
 
-    pub fn set_fullmove_clock(&mut self, value: u8) {
+    pub fn set_fullmove_clock(&mut self, value: u16) {
         self.fullmove_clock = value;
     }
 
@@ -77,7 +77,7 @@ impl BoardInfo {
         self.halfmove_clock
     }
 
-    pub fn get_fullmove_clock(&self) -> u8 {
+    pub fn get_fullmove_clock(&self) -> u16 {
         self.fullmove_clock
     }
 
