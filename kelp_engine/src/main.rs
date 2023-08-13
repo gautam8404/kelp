@@ -38,6 +38,8 @@ fn main() {
     let tricky = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ";
     let empty = "8/8/8/8/8/8/8/8 w KQ - 0 1";
 
+    let d_fen = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
+
     let mut table = LookupTable::new();
     table.populate();
 
@@ -52,6 +54,7 @@ fn main() {
     // println!("{}", board);
 
     let mut movgen = MovGen::new(&table);
+    println!("{}", A5 as u8);
 
     // movgen.print_attacked(Color::White, &board);
     // println!("{}\n", board.get_piece_occ(BlackQueen));
@@ -93,18 +96,30 @@ fn main() {
     let depth = args.get(1).unwrap_or(&"4".to_string()).parse::<u16>().unwrap();
     let mut fen = args.get(2).unwrap_or(&starring_fen.to_string()).to_string();
     //
-    let mut board = Board::parse(Fen(fen)).unwrap();
-    let mut board = Board::parse(Fen(empty.to_string())).unwrap();
-    board.add_piece(WhitePawn, H4);
-    board.add_piece(BlackPawn, A4);
-    board.set_en_passant(H3);
-    board.info.set_turn(Color::Black);
+    let mut board = Board::parse(Fen(d_fen.to_string())).unwrap();
+    // let mut board = Board::parse(Fen(empty.to_string())).unwrap();
+    // board.add_piece(WhitePawn, H4);
+    // board.add_piece(BlackPawn, A4);
+    // board.set_en_passant(H3);
+    // board.info.set_turn(Color::Black);
 
     // board.add_piece(WhiteKnight, H4 - 8);
     println!("{:?}", board);
     movgen.generate_moves(&board);
-    println!("{:?}", movgen.move_list);
 
+    for i in movgen.move_list.iter() {
+        print!("{}  ", i);
+        println!("{:?}", i);
+    }
+    println!("{:?}", board.get_side_to_move());
+    println!("{}", board.is_king_checked(Color::White, &movgen));
+
+    for i in movgen.move_list.iter() {
+        let a = board.make_move(*i);
+        println!("{}", board.is_king_checked(board.get_side_to_move(), &movgen));
+        board.unmake_move(a.unwrap());
+
+    }
 
     // let mut empty_board = Board::parse(Fen(empty.to_string())).unwrap();
     // board.add_piece(WhiteKnight, E1);
@@ -116,23 +131,23 @@ fn main() {
     // movgen.generate_castling_moves(Color::White, &board);
     // println!("{:?}", board);
     // let mut new_bb = BitBoard::empty();
-    for i in movgen.move_list.iter() {
-        print!("{}  ", i);
-        println!("{:?}", i);
-    //        println!("{:?}  ", i);
-        println!("board after making move: {}", i);
-        let a = board.make_move(*i);
-        if a.is_none() {
-            println!("Invalid move: {}", i);
-            continue;
-        }
-        println!("{:?}", board);
-        println!("board after unmaking move: {}", i);
-        board.unmake_move(a.unwrap());
-        println!("{:?}", board);
-        std::io::stdin().read_line(&mut String::new()).unwrap();
-    //         new_bb.set_bit(i.to as u8);
-    }
+    // for i in movgen.move_list.iter() {
+    //     // print!("{}  ", i);
+    //     // println!("{:?}", i);
+    // //        println!("{:?}  ", i);
+    //     println!("board after making move: {}", i);
+    //     let a = board.make_move(*i);
+    //     if a.is_none() {
+    //         println!("Invalid move: {}", i);
+    //         continue;
+    //     }
+    //     println!("{:?}", board);
+    //     println!("board after unmaking move: {}", i);
+    //     board.unmake_move(a.unwrap());
+    //     println!("{:?}", board);
+    //     std::io::stdin().read_line(&mut String::new()).unwrap();
+    // //         new_bb.set_bit(i.to as u8);
+    // }
     //
     // println!("{}", new_bb);
     // let mut nodes = 0;

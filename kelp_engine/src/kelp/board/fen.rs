@@ -100,10 +100,10 @@ impl Fen {
 
     pub fn is_valid(&self) -> Result<(), FenParseError> {
         let parts: Vec<&str> = self.0.split_whitespace().collect::<Vec<&str>>();
-        if parts.len() != 6 {
+        if parts.len() != 6 && parts.len() != 4 {
             return Err(FenParseError::InvalidFen(format!(
                 "Invalid number of parts: {}, \
-            A FEN string must have exactly 6 parts.",
+        A FEN string must have exactly 6 or 4 parts separated by whitespace",
                 parts.len()
             )));
         }
@@ -152,25 +152,27 @@ impl Fen {
             }
         }
 
-        match parts[4].parse::<u8>() {
-            Ok(_) => {}
-            Err(_) => {
-                return Err(FenParseError::InvalidHalfMoveClock(format!(
-                    "Invalid halfmove clock: {}, \
+        if parts.len() > 4 {
+            match parts[4].parse::<u8>() {
+                Ok(_) => {}
+                Err(_) => {
+                    return Err(FenParseError::InvalidHalfMoveClock(format!(
+                        "Invalid halfmove clock: {}, \
             must be a number that can be parsed as a u8",
-                    parts[4]
-                )))
+                        parts[4]
+                    )))
+                }
             }
-        }
 
-        match parts[5].parse::<u8>() {
-            Ok(_) => {}
-            Err(_) => {
-                return Err(FenParseError::InvalidFullMoveClock(format!(
-                    "Invalid fullmove number: {}, \
+            match parts[5].parse::<u8>() {
+                Ok(_) => {}
+                Err(_) => {
+                    return Err(FenParseError::InvalidFullMoveClock(format!(
+                        "Invalid fullmove number: {}, \
             must be a number that can be parsed as a u8",
-                    parts[5]
-                )))
+                        parts[5]
+                    )))
+                }
             }
         }
 

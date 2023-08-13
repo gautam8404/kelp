@@ -10,6 +10,7 @@ use crate::kelp::board::piece::Color::*;
 use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::Squares;
 use crate::kelp::{kelp_core::bitboard::BitBoard, BitBoardArray, BoardInfo, GamePhase, GameState};
+use log::info;
 use std::fmt::{Debug, Display};
 use std::str::FromStr;
 use strum::IntoEnumIterator;
@@ -26,10 +27,13 @@ pub struct Board {
 }
 
 impl Board {
+
+    #[inline(always)]
     pub fn add_to_bb(&mut self, piece: BoardPiece, square: Squares) {
         self.bitboards[piece as usize].set_bit(square as u8);
     }
 
+    #[inline(always)]
     pub fn remove_from_bb(&mut self, piece: BoardPiece, square: Squares) {
         self.bitboards[piece as usize].clear_bit(square as u8);
     }
@@ -40,25 +44,31 @@ impl Board {
         }
         self.add_piece(piece, square);
     }
+
+    #[inline(always)]
     pub fn add_piece(&mut self, piece: BoardPiece, square: Squares) {
         self.add_to_bb(piece, square);
         // self.hash ^= crate::kelp::zobrist::get_piece_hash(piece, square); TODO
     }
 
+    #[inline(always)]
     pub fn remove_piece(&mut self, piece: BoardPiece, square: Squares) {
         self.remove_from_bb(piece, square);
         // self.hash ^= crate::kelp::zobrist::get_piece_hash(piece, square); TODO
     }
 
+    #[inline(always)]
     pub fn move_piece(&mut self, piece: BoardPiece, from: Squares, to: Squares) {
         self.remove_piece(piece, from);
         self.add_piece(piece, to);
     }
 
+    #[inline(always)]
     pub fn get_piece(&self, square: Squares) -> Option<BoardPiece> {
         BoardPiece::iter().find(|&piece| self.bitboards[piece as usize].get_bit(square as u8))
     }
 
+    #[inline(always)]
     pub fn get_king_square(&self, color: Color) -> Squares {
         let king = match color {
             Color::White => WhiteKing,
@@ -72,15 +82,18 @@ impl Board {
         sq.unwrap()
     }
 
+    #[inline(always)]
     pub fn is_king_checked(&self, color: Color, gen: &MovGen) -> bool {
         let king = self.get_king_square(color);
         gen.is_attacked(king, !color, self)
     }
 
+    #[inline(always)]
     pub fn get_piece_occ(&self, piece: BoardPiece) -> BitBoard {
         self.bitboards[piece as usize]
     }
 
+    #[inline(always)]
     pub fn get_white_occ(&self) -> BitBoard {
         let mut out = BitBoard::empty();
         out = self.bitboards[WhitePawn as usize]
@@ -92,6 +105,7 @@ impl Board {
         out
     }
 
+    #[inline(always)]
     pub fn get_black_occ(&self) -> BitBoard {
         let mut out = BitBoard::empty();
         out = self.bitboards[BlackPawn as usize]
@@ -103,14 +117,17 @@ impl Board {
         out
     }
 
+    #[inline(always)]
     pub fn get_occ(&self) -> BitBoard {
         self.get_white_occ() | self.get_black_occ()
     }
 
+    #[inline(always)]
     pub fn get_en_passant(&self) -> Option<Squares> {
         self.info.en_passant
     }
 
+    #[inline(always)]
     pub fn set_en_passant(&mut self, square: Squares) {
         self.info.en_passant = Some(square);
     }
@@ -123,6 +140,7 @@ impl Board {
         fen.unwrap().to_string()
     }
 
+    #[inline(always)]
     pub fn get_side_to_move(&self) -> Color {
         self.info.turn
     }
@@ -130,56 +148,62 @@ impl Board {
 
 // Make / Unmake move and helper functions
 impl Board {
-            fn make_normal(&mut self, mov: Move) {
-                if mov.capture.is_some() {
-                    self.remove_piece(mov.capture.unwrap(), mov.to);
-                }
-                self.move_piece(mov.piece, mov.from, mov.to);
-            }
+    #[inline(always)]
+    fn make_normal(&mut self, mov: Move) {
+        if mov.capture.is_some() {
+            self.remove_piece(mov.capture.unwrap(), mov.to);
+        }
+        self.move_piece(mov.piece, mov.from, mov.to);
+    }
 
-            fn make_double_pawn(&mut self, mov: Move) {
-                self.move_piece(mov.piece, mov.from, mov.to);
-                let color = mov.piece.get_color();
-                let en_passant = match color {
-                    White => mov.to - 8,
-                    Black => mov.to + 8,
-                };
-                self.set_en_passant(en_passant);
-            }
+    #[inline(always)]
+    fn make_double_pawn(&mut self, mov: Move) {
+        self.move_piece(mov.piece, mov.from, mov.to);
+        let color = mov.piece.get_color();
+        let en_passant = match color {
+            White => mov.to - 8,
+            Black => mov.to + 8,
+        };
+        self.set_en_passant(en_passant);
+    }
 
-            fn make_en_passant(&mut self, mov: Move) {
-                self.move_piece(mov.piece, mov.from, mov.to);
-                let capture = match mov.piece.get_color() {
-                    White => mov.to - 8,
-                    Black => mov.to + 8,
-                };
-                self.remove_piece(mov.capture.unwrap(), capture);
-            }
+    #[inline(always)]
+    fn make_en_passant(&mut self, mov: Move) {
+        self.move_piece(mov.piece, mov.from, mov.to);
+        let capture = match mov.piece.get_color() {
+            White => mov.to - 8,
+            Black => mov.to + 8,
+        };
+        self.remove_piece(mov.capture.unwrap(), capture);
+    }
+    #[inline(always)]
+    fn make_promotion(&mut self, mov: Move, promoted_to: BoardPiece) {
+        if mov.capture.is_some() {
+            self.remove_piece(mov.capture.unwrap(), mov.to);
+        }
+        self.remove_piece(mov.piece, mov.from);
+        self.add_piece(promoted_to, mov.to);
+    }
 
-            fn make_promotion(&mut self, mov: Move, promoted_to: BoardPiece) {
-                if mov.capture.is_some() {
-                    self.remove_piece(mov.capture.unwrap(), mov.to);
-                }
-                self.remove_piece(mov.piece, mov.from);
-                self.add_piece(promoted_to, mov.to);
-            }
-            fn make_castle(&mut self, mov: Move, castle: CastlingRights) {
-                let color = mov.piece.get_color();
-                let (king_from, king_to, rook_from, rook_to) = match castle {
-                    CastlingRights::WhiteKingSide => (E1, G1, H1, F1),
-                    CastlingRights::WhiteQueenSide => (E1, C1, A1, D1),
-                    CastlingRights::BlackKingSide => (E8, G8, H8, F8),
-                    CastlingRights::BlackQueenSide => (E8, C8, A8, D8),
-                };
-                let rook = match color {
-                    Color::White => WhiteRook,
-                    Color::Black => BlackRook,
-                };
-                self.move_piece(mov.piece, king_from, king_to);
-                self.move_piece(rook, rook_from, rook_to);
-                self.info.castle.remove(castle);
-            }
+    #[inline(always)]
+    fn make_castle(&mut self, mov: Move, castle: CastlingRights) {
+        let color = mov.piece.get_color();
+        let (king_from, king_to, rook_from, rook_to) = match castle {
+            CastlingRights::WhiteKingSide => (E1, G1, H1, F1),
+            CastlingRights::WhiteQueenSide => (E1, C1, A1, D1),
+            CastlingRights::BlackKingSide => (E8, G8, H8, F8),
+            CastlingRights::BlackQueenSide => (E8, C8, A8, D8),
+        };
+        let rook = match color {
+            Color::White => WhiteRook,
+            Color::Black => BlackRook,
+        };
+        self.move_piece(mov.piece, king_from, king_to);
+        self.move_piece(rook, rook_from, rook_to);
+        self.info.castle.remove(castle);
+    }
 
+    #[inline(always)]
     fn unmake_normal(&mut self, mov: Move) {
         self.move_piece(mov.piece, mov.to, mov.from);
         if mov.capture.is_some() {
@@ -187,10 +211,12 @@ impl Board {
         }
     }
 
+    #[inline(always)]
     fn unmake_double_pawn(&mut self, mov: Move) {
         self.move_piece(mov.piece, mov.to, mov.from);
     }
 
+    #[inline(always)]
     fn unmake_en_passant(&mut self, mov: Move) {
         self.move_piece(mov.piece, mov.to, mov.from);
         let capture = match mov.piece.get_color() {
@@ -200,6 +226,7 @@ impl Board {
         self.add_piece(mov.capture.unwrap(), capture);
     }
 
+    #[inline(always)]
     fn unmake_promotion(&mut self, mov: Move, promoted_to: BoardPiece) {
         self.add_piece(mov.piece, mov.from);
         self.remove_piece(promoted_to, mov.to);
@@ -208,6 +235,7 @@ impl Board {
         }
     }
 
+    #[inline(always)]
     fn unmake_castle(&mut self, mov: Move, castle: CastlingRights) {
         let color = mov.piece.get_color();
         let (king_from, king_to, rook_from, rook_to) = match castle {
@@ -225,102 +253,104 @@ impl Board {
         self.info.castle.add(castle);
     }
 
+    #[inline(always)]
     pub fn push_history(&mut self, mov: Option<MoveHistory>) {
         if mov.is_none() {
             return;
         }
-        info!("Pushing move: {:?}", mov);
         self.move_history.push(mov.unwrap());
     }
 
+    #[inline(always)]
     pub fn undo_history(&mut self) {
         let mov = self.move_history.pop();
         if mov.is_none() {
             return;
         }
-        info!("Undoing move: {:?}", mov);
         self.unmake_move(mov.unwrap());
     }
 
-        pub fn make_move(&mut self, mov: Move) -> Option<MoveHistory> {
-            use BoardPiece::*;
-            use CastlingRights::*;
-            use Color::*;
-            use MoveType::*;
+    #[inline(always)]
+    pub fn make_move(&mut self, mov: Move) -> Option<MoveHistory> {
+        use BoardPiece::*;
+        use CastlingRights::*;
+        use Color::*;
+        use MoveType::*;
 
-            let mut old_en_passant = self.info.en_passant;
-            let mut old_castle = self.info.castle;
-            let mut old_half_move_clock = self.info.halfmove_clock;
-            let mut old_full_move_number = self.info.fullmove_clock;
+        let mut old_en_passant = self.info.en_passant;
+        let mut old_castle = self.info.castle;
+        let mut old_half_move_clock = self.info.halfmove_clock;
+        let mut old_full_move_number = self.info.fullmove_clock;
 
-            match mov.move_type {
-                Normal => {
-                    self.make_normal(mov);
-                }
-                DoublePawnPush => {
-                    self.make_double_pawn(mov);
-                }
-
-                EnPassant(sq) => {
-                    self.make_en_passant(mov);
-                }
-
-                Promotion(promoted_to) => {
-                    self.make_promotion(mov, promoted_to.unwrap());
-                }
-
-                Castle(castle) => {
-                    self.make_castle(mov, castle);
-                }
-            };
-
-            // State Updates
-
-            // Update turn
-            self.info.turn = !self.info.turn;
-
-            // Update fullmove number
-            if mov.piece.get_color() == Black {
-                self.info.fullmove_clock += 1;
+        match mov.move_type {
+            Normal => {
+                self.make_normal(mov);
+            }
+            DoublePawnPush => {
+                self.make_double_pawn(mov);
             }
 
-            // Update halfmove clock
-            if mov.capture.is_some() || mov.piece == WhitePawn || mov.piece == BlackPawn {
-                self.info.halfmove_clock = 0;
-            } else {
-                self.info.halfmove_clock += 1;
+            EnPassant(sq) => {
+                self.make_en_passant(mov);
             }
 
-            // Update en passant
-            if mov.move_type != DoublePawnPush {
-                self.info.en_passant = None;
+            Promotion(promoted_to) => {
+                self.make_promotion(mov, promoted_to.unwrap());
             }
 
-            // Update castling rights
-            if mov.from == A1 || mov.to == A1 {
-                self.info.castle.remove(WhiteQueenSide);
-            } else if mov.from == H1 || mov.to == H1 {
-                self.info.castle.remove(WhiteKingSide);
-            } else if mov.from == A8 || mov.to == A8 {
-                self.info.castle.remove(BlackQueenSide);
-            } else if mov.from == H8 || mov.to == H8 {
-                self.info.castle.remove(BlackKingSide);
-            } else if mov.from == E1 || mov.to == E1 {
-                self.info.castle.remove(WhiteKingSide);
-                self.info.castle.remove(WhiteQueenSide);
-            } else if mov.from == E8 || mov.to == E8 {
-                self.info.castle.remove(BlackKingSide);
-                self.info.castle.remove(BlackQueenSide);
+            Castle(castle) => {
+                self.make_castle(mov, castle);
             }
+        };
 
-            Some(MoveHistory {
-                mov: mov,
-                castle_rights: old_castle,
-                en_passant: old_en_passant,
-                half_move_clock: old_half_move_clock,
-            })
+        // State Updates
+
+        // Update turn
+        self.info.turn = !self.info.turn;
+
+        // Update fullmove number
+        if mov.piece.get_color() == Black {
+            self.info.fullmove_clock += 1;
         }
 
+        // Update halfmove clock
+        if mov.capture.is_some() || mov.piece == WhitePawn || mov.piece == BlackPawn {
+            self.info.halfmove_clock = 0;
+        } else {
+            self.info.halfmove_clock += 1;
+        }
+
+        // Update en passant
+        if mov.move_type != DoublePawnPush {
+            self.info.en_passant = None;
+        }
+
+        // Update castling rights
+        if mov.from == A1 || mov.to == A1 {
+            self.info.castle.remove(WhiteQueenSide);
+        } else if mov.from == H1 || mov.to == H1 {
+            self.info.castle.remove(WhiteKingSide);
+        } else if mov.from == A8 || mov.to == A8 {
+            self.info.castle.remove(BlackQueenSide);
+        } else if mov.from == H8 || mov.to == H8 {
+            self.info.castle.remove(BlackKingSide);
+        } else if mov.from == E1 || mov.to == E1 {
+            self.info.castle.remove(WhiteKingSide);
+            self.info.castle.remove(WhiteQueenSide);
+        } else if mov.from == E8 || mov.to == E8 {
+            self.info.castle.remove(BlackKingSide);
+            self.info.castle.remove(BlackQueenSide);
+        }
+
+        Some(MoveHistory {
+            mov: mov,
+            castle_rights: old_castle,
+            en_passant: old_en_passant,
+            half_move_clock: old_half_move_clock,
+        })
+    }
+
+    #[inline(always)]
     pub fn unmake_move(&mut self, history: MoveHistory) {
         let color = history.mov.piece.get_color();
         let mov = history.mov;
@@ -432,8 +462,13 @@ impl FenParse<Fen, Board, FenParseError> for Board {
             }),
         };
 
-        let halfmove_clock = parts[4].parse::<u8>().unwrap();
-        let fullmove_clock = parts[5].parse::<u16>().unwrap();
+        let mut halfmove_clock = 0;
+        let mut fullmove_clock = 0;
+
+        if parts.len() > 4 {
+            halfmove_clock = parts[4].parse::<u8>().unwrap();
+            fullmove_clock = parts[5].parse::<u16>().unwrap();
+        }
 
         let game_phase = {
             if number_of_pieces <= 12 {
