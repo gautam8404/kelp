@@ -254,22 +254,22 @@ impl Board {
             let mut old_full_move_number = self.info.fullmove_clock;
 
             match mov.move_type {
-                MoveType::Normal => {
+                Normal => {
                     self.make_normal(mov);
                 }
-                MoveType::DoublePawnPush => {
+                DoublePawnPush => {
                     self.make_double_pawn(mov);
                 }
 
-                MoveType::EnPassant(sq) => {
+                EnPassant(sq) => {
                     self.make_en_passant(mov);
                 }
 
-                MoveType::Promotion(promoted_to) => {
+                Promotion(promoted_to) => {
                     self.make_promotion(mov, promoted_to.unwrap());
                 }
 
-                MoveType::Castle(castle) => {
+                Castle(castle) => {
                     self.make_castle(mov, castle);
                 }
             };
@@ -281,7 +281,7 @@ impl Board {
 
             // Update fullmove number
             if mov.piece.get_color() == Black {
-                // self.info.fullmove_clock += 1;
+                self.info.fullmove_clock += 1;
             }
 
             // Update halfmove clock
@@ -348,8 +348,8 @@ impl Board {
         self.info.castle = history.castle_rights;
         self.info.en_passant = history.en_passant;
         self.info.halfmove_clock = history.half_move_clock;
-        if color == Black {
-            // self.info.fullmove_clock -= 1;
+        if color == Black && self.info.fullmove_clock > 1 {
+            self.info.fullmove_clock -= 1;
         }
     }
 }

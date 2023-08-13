@@ -12,6 +12,7 @@ use crate::kelp::{
 };
 use log::info;
 use strum::IntoEnumIterator;
+use crate::kelp::Squares::E1;
 
 pub struct MovGen<'a> {
     pub table: &'a LookupTable,
@@ -205,8 +206,9 @@ impl<'a> MovGen<'a> {
 
                     // Generate En Passant Captures
                     if board.get_en_passant().is_some() {
-                        let en_passant = board.get_en_passant().unwrap();
-                        if attacks.get_bit(en_passant as u8) {
+                        let en_passant = self.table.get_pawn_attacks(White, sq) & BitBoard::from(1u64 << (board.get_en_passant().unwrap() as u8));
+                        if en_passant.0 != 0 {
+                            let en_passant = Squares::from_repr(en_passant.get_lsb()).unwrap();
                             mv = Move::new(
                                 square,
                                 en_passant,
@@ -245,7 +247,7 @@ impl<'a> MovGen<'a> {
                     );
                     moves.push(mv);
 
-                    // Generate double pawn push
+                    // Generate Black double pawn push
                     if square.rank() == 6 && !board.get_occ().get_bit(sq - 16) {
                         mv = Move::new(
                             square,
@@ -257,7 +259,7 @@ impl<'a> MovGen<'a> {
                         );
                         moves.push(mv);
 
-                        // Generate Pawn Promotions
+                        // Generate Black Pawn Promotions
                     } else if square.rank() == 1 {
                         mv.set_type(MoveType::Promotion(Some(BlackQueen)));
                         moves.push(mv);
@@ -269,7 +271,7 @@ impl<'a> MovGen<'a> {
                         moves.push(mv);
                     }
 
-                    // Generate Pawn Captures
+                    // Generate Black Pawn Captures
 
                     let attacks = self.table.get_pawn_attacks(Black, sq);
                     for attack in attacks {
@@ -303,10 +305,11 @@ impl<'a> MovGen<'a> {
                         }
                     }
 
-                    // Generate En Passant Captures
+                    // Generate Black En Passant Captures
                     if board.get_en_passant().is_some() {
-                        let en_passant = board.get_en_passant().unwrap();
-                        if attacks.get_bit(en_passant as u8) {
+                        let en_passant = self.table.get_pawn_attacks(Black, sq) & BitBoard::from(1u64 << (board.get_en_passant().unwrap() as u8));
+                        if en_passant != BitBoard::empty() {
+                            let en_passant = Squares::from_repr(en_passant.get_lsb()).unwrap();
                             mv = Move::new(
                                 square,
                                 en_passant,
@@ -323,7 +326,7 @@ impl<'a> MovGen<'a> {
         };
     }
 
-    fn generate_castling_moves(&mut self, side: Color, board: &Board) {
+    pub fn generate_castling_moves(&mut self, side: Color, board: &Board) { //TODO: make private
         let castle = board.info.castle;
 
         match side {
@@ -335,6 +338,10 @@ impl<'a> MovGen<'a> {
                     && !self.is_attacked(Squares::E1, !side, board)
                     && !self.is_attacked(Squares::F1, !side, board)
                 {
+                    let king_sq = board.get_piece(E1);
+                    if king_sq.is_none() || king_sq.unwrap() != WhiteKing {
+                        return;
+                    }
                     self.move_list.push(Move::new(
                         Squares::E1,
                         Squares::G1,
@@ -371,6 +378,10 @@ impl<'a> MovGen<'a> {
                     && !self.is_attacked(Squares::E8, !side, board)
                     && !self.is_attacked(Squares::F8, !side, board)
                 {
+                    let king_sq = board.get_piece(E1);
+                    if king_sq.is_none() || king_sq.unwrap() != BlackKing {
+                        return;
+                    }
                     self.move_list.push(Move::new(
                         Squares::E8,
                         Squares::G8,

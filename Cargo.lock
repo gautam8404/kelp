@@ -90,7 +90,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kelp"
+name = "kelp_engine"
 version = "0.1.0"
 dependencies = [
  "env_logger",
