@@ -1,10 +1,13 @@
-use super::board::moves::Move;
 use super::board::board::Board;
+use super::board::moves::Move;
 use super::kelp_core::lookup_table::LookupTable;
 use super::mov_gen::generator::MovGen;
-use super::UCI;
+use super::uci_trait::UCI;
 use crate::kelp::board::fen::{Fen, FenParse};
 use crate::kelp::board::piece::BoardPiece::{self, *};
+use log;
+
+use rand::seq::SliceRandom; // just for a random game
 
 /// Main Implementation for all UCI commands also acts as a library for the engine
 /// Kelp contains the board and the mov_gen from kelp::board and kelp::mov_gen respectively
@@ -41,7 +44,7 @@ impl<'a> Kelp<'a> {
     /// makes move on board, unmakes it if it is illegal
     pub fn make_move(&mut self, mov: Move) -> bool {
         self.board.make(mov);
-        if self.board.is_check(&self.mov_gen) {
+        if self.board.is_check_opp(&self.mov_gen) {
             self.board.unmake();
             return false;
         }
@@ -72,8 +75,7 @@ impl UCI for Kelp<'_> {
         if arg[0] == "startpos" {
             self.board = Board::default();
             point += 1;
-        }
-        else if arg[0] == "fen" {
+        } else if arg[0] == "fen" {
             point += 1;
             let mut fen = String::new();
             while point < arg.len() && arg[point] != "moves" {
@@ -97,8 +99,31 @@ impl UCI for Kelp<'_> {
         }
     }
 
-    fn handle_go(&self, arg: &[&str]) {
-        todo!()
+    fn handle_go(&mut self, arg: &[&str]) {
+        self.mov_gen.generate_moves(&self.board);
+
+        // let mv = self.parse_move("a2a4");
+        // if mv.is_none() {
+        //     self.send_bestmove("a2a4");
+        //     return;
+        // }
+
+        let mut random_move;
+
+        loop {
+            random_move = *self
+                .mov_gen
+                .move_list
+                .0
+                .choose(&mut rand::thread_rng())
+                .unwrap();
+
+            if self.make_move(random_move) {
+                break;
+            }
+        }
+
+        self.send_bestmove(random_move.to_string().as_str());
     }
 
     fn handle_uci(&self, arg: &[&str]) {
@@ -108,7 +133,7 @@ impl UCI for Kelp<'_> {
     }
 
     fn handle_quit(&self, arg: &[&str]) {
-        todo!()
+        std::process::exit(0);
     }
 
     fn handle_stop(&self, arg: &[&str]) {
@@ -127,12 +152,22 @@ impl UCI for Kelp<'_> {
                 self.send("For more information visit https://github.com/gautam8404/kelp/#readme");
             }
             _ => {
-                self.send(format!("Unknown command: {}. Type help for more information", command).as_str());
+                self.send(
+                    format!(
+                        "Unknown command: {}. Type help for more information",
+                        command
+                    )
+                    .as_str(),
+                );
             }
         }
     }
 
     fn print_board(&self) {
         self.send(format!("{}", self.board).as_str());
+    }
+
+    fn log_stdio(&self, arg: &str) {
+        log::info!("{}", arg);
     }
 }

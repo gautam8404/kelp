@@ -1,7 +1,4 @@
 use super::piece::{BoardPiece, Color};
-use crate::kelp::board::board::Board;
-use crate::kelp::board::piece::BoardPiece::{BlackPawn, WhitePawn};
-use crate::kelp::SideToMove::Black;
 use crate::kelp::{Squares, MAX_SIZE_MOVES_ARR};
 use log;
 use std::fmt::{Debug, Display};
@@ -227,6 +224,45 @@ impl MoveList {
 
     pub fn extend(&mut self, other: &mut MoveList) {
         self.0.append(&mut other.0);
+    }
+
+    pub fn sort(&mut self) {
+        self.0.sort_by(|a, b| {
+            let a_capture = a.capture;
+            let b_capture = b.capture;
+            let a_promotion = a.get_promotion();
+            let b_promotion = b.get_promotion();
+
+            let mut a_cap_score = 0;
+            let mut b_cap_score = 0;
+
+            if a_capture.is_some() {
+                let a_capture = a_capture.unwrap();
+                a_cap_score = a_capture.get_value();
+            }
+            if b_capture.is_some() {
+                let b_capture = b_capture.unwrap();
+                b_cap_score = b_capture.get_value();
+            }
+
+            let mut a_prom_score = 0;
+            let mut b_prom_score = 0;
+
+            if a_promotion.is_some() {
+                let a_promotion = a_promotion.unwrap();
+                a_prom_score = a_promotion.get_value();
+            }
+
+            if b_promotion.is_some() {
+                let b_promotion = b_promotion.unwrap();
+                b_prom_score = b_promotion.get_value();
+            }
+
+            let a_score = (a_cap_score - a.piece.get_value() + a_prom_score * 10).abs();
+            let b_score = (b_cap_score - b.piece.get_value() + b_prom_score * 10).abs();
+
+            b_score.cmp(&a_score)
+        });
     }
 }
 

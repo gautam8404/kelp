@@ -138,7 +138,7 @@ pub fn perft_driver(depth: u16, board: &mut Board, gen: &mut MovGen, nodes: &mut
     let moves_list = gen.move_list.clone();
 
     for &move_to_make in moves_list.iter() {
-        let undo_info = board.make_move(move_to_make);
+        let undo_info = board.make_move(move_to_make, false);
         if undo_info.is_none() {
             continue;
         }
@@ -160,7 +160,7 @@ pub fn perft_test(depth: u16, board: &mut Board, gen: &mut MovGen, nodes: &mut u
     let time = std::time::Instant::now();
 
     for moves in moves_list.iter() {
-        let a = board.make_move(*moves);
+        let a = board.make_move(*moves, false);
         if a.is_none() {
             continue;
         }

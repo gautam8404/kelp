@@ -13,17 +13,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2d4903a-89c8-4b37-ab92-16886ff7428e" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/eval.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/search.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/uci_trait.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/board/board.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/board/board.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/board/moves.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/board/moves.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/board/piece.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/board/piece.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/mov_gen/generator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/mov_gen/generator.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/mov_gen/perft.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/mov_gen/perft.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kelp_engine/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/lib.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kelp_perft/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_perft/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/perft.sh" beforeDir="false" afterPath="$PROJECT_DIR$/perft.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,7 +92,73 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Run (engine)">
+  <component name="RunManager" selected="Cargo.Build Release (engine)">
+    <configuration name="Build Dev (engine)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="build --bin kelp_engine --package kelp_engine" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="emulateTerminal" value="false" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Build Release (engine)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="build --release --bin kelp_engine --package kelp_engine" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="emulateTerminal" value="false" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Build Release cpu native (all)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="build --release" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="emulateTerminal" value="false" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <envs>
+        <env name="RUSTFLAGS" value="-C target-cpu=native" />
+      </envs>
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Build Release cpu native (engine)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="build --release --bin kelp_engine --package kelp_engine" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="emulateTerminal" value="false" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <envs>
+        <env name="RUSTFLAGS" value="-C target-cpu=native" />
+      </envs>
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="Run (engine)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run  --bin kelp_engine --package kelp_engine" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -127,6 +197,10 @@
     </configuration>
     <list>
       <item itemvalue="Cargo.Run (engine)" />
+      <item itemvalue="Cargo.Build Dev (engine)" />
+      <item itemvalue="Cargo.Build Release (engine)" />
+      <item itemvalue="Cargo.Build Release cpu native (engine)" />
+      <item itemvalue="Cargo.Build Release cpu native (all)" />
       <item itemvalue="Cargo.Run (perft)" />
     </list>
   </component>
@@ -175,7 +249,9 @@
       <workItem from="1691934927734" duration="13116000" />
       <workItem from="1692006303693" duration="5787000" />
       <workItem from="1692084039078" duration="7816000" />
-      <workItem from="1692092219851" duration="5315000" />
+      <workItem from="1692092219851" duration="18545000" />
+      <workItem from="1692135942510" duration="3515000" />
+      <workItem from="1692139482607" duration="3190000" />
     </task>
     <servers />
   </component>

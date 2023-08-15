@@ -1,5 +1,5 @@
 mod kelp;
-extern crate env_logger;
+extern crate simplelog;
 #[macro_use]
 extern crate log;
 
@@ -9,7 +9,6 @@ use crate::kelp::mov_gen::generator::MovGen;
 use kelp::kelp_core::bitboard::BitBoard;
 use kelp::kelp_core::lookup_table::LookupTable;
 use kelp::Squares::{self, *};
-use kelp::{BLACK_OCCUPIED, OCCUPIED, WHITE_OCCUPIED};
 use std::thread::sleep;
 
 use crate::kelp::board::piece::BoardPiece::{
@@ -17,8 +16,9 @@ use crate::kelp::board::piece::BoardPiece::{
 };
 use crate::kelp::kelp::Kelp;
 use crate::kelp::mov_gen::perft::*;
+use crate::kelp::uci_trait::UCI;
 use kelp::board::{board::Board, fen::Fen};
-use crate::kelp::UCI;
+use simplelog::{Config, LevelFilter, WriteLogger};
 
 fn ptest(gen: &mut MovGen) {
     use crate::kelp::mov_gen::perft::*;
@@ -36,7 +36,13 @@ fn ptest(gen: &mut MovGen) {
     perft_test(depth, &mut board, gen, &mut nodes)
 }
 fn main() {
-    env_logger::init();
+    let file_path = std::env::var("KELP_LOG").unwrap_or("kelp.log".to_string());
+    let _ = WriteLogger::init(
+        LevelFilter::Debug,
+        Config::default(),
+        std::fs::File::create(file_path).unwrap(),
+    );
+
     let starring_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     let fein = "8/8/4R3/3B4/8/8/8/8 w - - 0 1";
     let fein = "r3k2r/p1ppqPb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBpPP/R3K2R w Kkq - 0 1";

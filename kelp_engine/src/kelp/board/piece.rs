@@ -1,5 +1,6 @@
+use crate::kelp::{BISHOP_VALUE, KING_VALUE, KNIGHT_VALUE, PAWN_VALUE, QUEEN_VALUE, ROOK_VALUE};
 use std::ops::Not;
-use strum_macros::{Display, EnumIter, EnumString};
+use strum_macros::{Display, EnumIter, EnumString, FromRepr};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Display)]
 pub enum Color {
@@ -19,7 +20,20 @@ impl Not for Color {
     }
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Display, EnumIter, EnumString)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Eq,
+    PartialEq,
+    Hash,
+    Ord,
+    PartialOrd,
+    Display,
+    EnumIter,
+    EnumString,
+    FromRepr,
+)]
 pub enum BoardPiece {
     #[strum(serialize = "P")]
     WhitePawn,
@@ -75,6 +89,18 @@ impl BoardPiece {
             BlackRook => "♜",
             BlackQueen => "♛",
             BlackKing => "♚",
+        }
+    }
+
+    pub fn get_value(&self) -> i32 {
+        use BoardPiece::*;
+        match self {
+            WhitePawn | BlackPawn => PAWN_VALUE,
+            WhiteKnight | BlackKnight => KNIGHT_VALUE,
+            WhiteBishop | BlackBishop => BISHOP_VALUE,
+            WhiteRook | BlackRook => ROOK_VALUE,
+            WhiteQueen | BlackQueen => QUEEN_VALUE,
+            WhiteKing | BlackKing => KING_VALUE,
         }
     }
 }

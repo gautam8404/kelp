@@ -9,7 +9,8 @@ edition = "2021"
 strum = "0.25.0"
 strum_macros = "0.25.1"
 log = "0.4.19"
-env_logger = "0.10.0"
+simplelog = "0.12.1"
+rand = "0.8.5" # TODO: remove this dependency
 
 
 

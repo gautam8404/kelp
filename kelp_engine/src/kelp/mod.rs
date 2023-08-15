@@ -2,6 +2,8 @@ pub mod board;
 pub mod kelp;
 pub mod kelp_core;
 pub mod mov_gen;
+mod search;
+pub mod uci_trait;
 
 use std::fmt::Debug;
 use std::ops::{Add, Sub};
@@ -28,16 +30,16 @@ pub enum GameState {
     Stalemate,
 }
 
-pub enum SideToMove {
-    White,
-    Black,
-}
-
-pub const WHITE_OCCUPIED: u64 = 0x000000000000FFFF;
-pub const BLACK_OCCUPIED: u64 = 0xFFFF000000000000;
-pub const OCCUPIED: u64 = 0xFFFF00000000FFFF;
-
 pub const MAX_SIZE_MOVES_ARR: usize = 256;
+
+// piece values
+
+const PAWN_VALUE: i32 = 100;
+const KNIGHT_VALUE: i32 = 300;
+const BISHOP_VALUE: i32 = 350;
+const ROOK_VALUE: i32 = 500;
+const QUEEN_VALUE: i32 = 1000;
+const KING_VALUE: i32 = 10000;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct BoardInfo {
@@ -143,91 +145,16 @@ impl Sub<u8> for Squares {
     }
 }
 
-/// UCI trait, implements basic functions for UCI protocol, all handle_* functions are passed with array of args excluding the keyword
-pub trait UCI {
-    fn handle_position(&mut self, arg: &[&str]);
-    fn handle_go(&self, arg: &[&str]);
+use Squares::*;
 
-    fn handle_uci(&self, arg: &[&str]);
-
-    fn handle_quit(&self, arg: &[&str]);
-
-    fn handle_stop(&self, arg: &[&str]);
-
-    fn handle_ready(&self, arg: &[&str]);
-
-    // To handle commands that are not implemented by default in trait
-    fn handle_unknown(&self, command: &str, arg: &[&str]);
-
-    fn print_board(&self);
-    fn is_keyword(&self, arg: &str) -> bool {
-        matches!(
-            arg,
-            "position" | "go" | "uci" | "quit" | "stop" | "ponderhit" | "debug" | "isready"
-        )
-    }
-
-    fn is_position(&self, arg: &str) -> bool {
-        matches!(arg, "startpos" | "fen")
-    }
-
-    fn is_go(&self, arg: &str) -> bool {
-        matches!(
-            arg,
-            "searchmoves"
-                | "ponder"
-                | "wtime"
-                | "btime"
-                | "winc"
-                | "binc"
-                | "movestogo"
-                | "depth"
-                | "nodes"
-                | "mate"
-                | "movetime"
-                | "infinite"
-        )
-    }
-
-    fn receive(&mut self, arg: &str) {
-        let mut args = arg.split_whitespace().collect::<Vec<&str>>();
-        if args.is_empty() {
-            return;
-        }
-        let command = args.remove(0);
-        match command {
-            "position" => self.handle_position(&args),
-            "go" => self.handle_go(&args),
-            "uci" => self.handle_uci(&args),
-            "quit" => self.handle_quit(&args),
-            "stop" => self.handle_stop(&args),
-            "isready" => self.handle_ready(&args),
-            "d" => self.print_board(),
-            _ => self.handle_unknown(command, &args),
-        }
-    }
-
-    fn send(&self, arg: &str) {
-        println!("{}", arg);
-    }
-
-    fn send_ready_ok(&self) {
-        self.send("readyok");
-    }
-
-    fn send_bestmove(&self, bestmove: &str) {
-        self.send(format!("bestmove {}", bestmove).as_str());
-    }
-
-    fn send_info(&self, info: &str) {
-        self.send(format!("info {}", info).as_str());
-    }
-
-    fn uci_loop(&mut self) {
-        loop {
-            let mut input = String::new();
-            std::io::stdin().read_line(&mut input).unwrap();
-            self.receive(input.trim());
-        }
-    }
-}
+#[rustfmt::skip]
+const MIRROR: [Squares; 64] = [
+    A8, B8, C8, D8, E8, F8, G8, H8,
+    A7, B7, C7, D7, E7, F7, G7, H7,
+    A6, B6, C6, D6, E6, F6, G6, H6,
+    A5, B5, C5, D5, E5, F5, G5, H5,
+    A4, B4, C4, D4, E4, F4, G4, H4,
+    A3, B3, C3, D3, E3, F3, G3, H3,
+    A2, B2, C2, D2, E2, F2, G2, H2,
+    A1, B1, C1, D1, E1, F1, G1, H1,
+];

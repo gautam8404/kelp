@@ -12,7 +12,7 @@ use crate::kelp::Squares::{self, *};
 use crate::kelp::{kelp_core::bitboard::BitBoard, BitBoardArray, BoardInfo, GamePhase, GameState};
 
 // strum
-use std::fmt::{Debug, Display, format};
+use std::fmt::{format, Debug, Display};
 use std::str::FromStr;
 use strum::IntoEnumIterator;
 
@@ -158,6 +158,16 @@ impl Board {
     pub fn is_check(&self, gen: &MovGen) -> bool {
         self.is_king_checked(self.info.turn, gen)
     }
+
+    #[inline(always)]
+    pub fn is_check_opp(&self, gen: &MovGen) -> bool {
+        self.is_king_checked(!self.info.turn, gen)
+    }
+
+    #[inline(always)]
+    pub fn get_bitboard(&self, piece: BoardPiece) -> BitBoard {
+        self.bitboards[piece as usize]
+    }
 }
 
 // Make / Unmake move and helper functions
@@ -270,9 +280,9 @@ impl Board {
     // makes move and pushes it to history also logs it, shouldn't be used for search or perft testing because of performance overhead by logging
     #[inline(always)]
     pub fn make(&mut self, mov: Move) {
-        let history = self.make_move(mov);
+        let history = self.make_move(mov, false);
         if history.is_some() {
-            log::info!("pushing {:?} to history", history.unwrap());
+            // log::info!("pushing {:?} to history", history.unwrap());
             self.move_history.push(history.unwrap());
         }
     }
@@ -284,12 +294,16 @@ impl Board {
         if mov.is_none() {
             return;
         }
-        log::info!("unmaking {:?} from history", mov.unwrap());
+        // log::info!("unmaking {:?} from history", mov.unwrap());
         self.unmake_move(mov.unwrap());
     }
 
     #[inline(always)]
-    pub fn make_move(&mut self, mov: Move) -> Option<MoveHistory> {
+    pub fn make_move(&mut self, mov: Move, only_captures: bool) -> Option<MoveHistory> {
+        if only_captures && mov.capture.is_none() {
+            return None;
+        }
+
         use BoardPiece::*;
         use CastlingRights::*;
         use Color::*;
@@ -526,36 +540,6 @@ impl FenParse<Fen, Board, FenParseError> for Board {
         })
     }
 }
-
-// impl Display for Board {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         let mut board = String::new();
-//         for rank in (0..8).rev() {
-//             for file in 0..8 {
-//                 let mut piece: Option<BoardPiece> = None;
-//                 for i in 0..12 {
-//                     if self.bitboards[i].get_bit(rank * 8 + file) {
-//                         piece = Some(BoardPiece::from(i as u8));
-//                         break;
-//                     }
-//                 }
-//                 board.push_str(&format!(
-//                     "{} ",
-//                     match piece {
-//                         Some(p) => format!(" {}", p.unicode()),
-//                         None => " .".to_string(),
-//                     }
-//                 ));
-//                 if file == 7 {
-//                     board.push_str(&format!("\t{}", rank + 1));
-//                 }
-//             }
-//             board.push('\n');
-//         }
-//         board.push_str("\n a  b  c  d  e  f  g  h\n");
-//         write!(f, "{}", board)
-//     }
-// }
 
 impl Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
