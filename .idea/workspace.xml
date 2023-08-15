@@ -13,17 +13,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2d4903a-89c8-4b37-ab92-16886ff7428e" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/kelp_engine/src/lib.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/board/board.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/board/board.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/board/fen.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/board/fen.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/board/moves.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/board/moves.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/mov_gen/generator.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/mov_gen/generator.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/mov_gen/perft.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/mov_gen/perft.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/lib.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kelp_engine/src/perft.sh" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_perft/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_perft/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/perft.sh" beforeDir="false" afterPath="$PROJECT_DIR$/perft.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,7 +74,7 @@
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;language.rust.cargo.check&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
@@ -92,7 +92,7 @@
     <configuration name="Run (engine)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run  --bin kelp_engine --package kelp_engine" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="emulateTerminal" value="false" />
+      <option name="emulateTerminal" value="true" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="false" />
@@ -105,9 +105,7 @@
       </envs>
       <option name="isRedirectInput" value="false" />
       <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
+      <method v="2" />
     </configuration>
     <configuration name="Run (perft)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="run --bin kelp_perft --package kelp_perft" />
@@ -174,7 +172,10 @@
       <workItem from="1691846607273" duration="1789000" />
       <workItem from="1691913657985" duration="8760000" />
       <workItem from="1691931815187" duration="3106000" />
-      <workItem from="1691934927734" duration="10078000" />
+      <workItem from="1691934927734" duration="13116000" />
+      <workItem from="1692006303693" duration="5787000" />
+      <workItem from="1692084039078" duration="7816000" />
+      <workItem from="1692092219851" duration="5315000" />
     </task>
     <servers />
   </component>

@@ -5,16 +5,18 @@ use super::piece::{
     BoardPiece::{self, *},
     Color,
 };
-use crate::kelp::board::moves::{GenType, Move, MoveArray, MoveHistory, MoveType};
+use crate::kelp::board::moves::{Move, MoveArray, MoveHistory, MoveType};
 use crate::kelp::board::piece::Color::*;
 use crate::kelp::mov_gen::generator::MovGen;
-use crate::kelp::Squares;
+use crate::kelp::Squares::{self, *};
 use crate::kelp::{kelp_core::bitboard::BitBoard, BitBoardArray, BoardInfo, GamePhase, GameState};
-use log::info;
-use std::fmt::{Debug, Display};
+
+// strum
+use std::fmt::{Debug, Display, format};
 use std::str::FromStr;
 use strum::IntoEnumIterator;
-use Squares::*;
+
+const STARTPOS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 #[derive(Clone, Eq, PartialEq)] // TODO: Not sure whether to add Copy trait yet
 pub struct Board {
@@ -26,8 +28,14 @@ pub struct Board {
     pub move_history: MoveArray,
 }
 
-impl Board {
+impl Default for Board {
+    fn default() -> Self {
+        let board = Board::parse(Fen(STARTPOS.to_string())).unwrap();
+        board
+    }
+}
 
+impl Board {
     #[inline(always)]
     pub fn add_to_bb(&mut self, piece: BoardPiece, square: Squares) {
         self.bitboards[piece as usize].set_bit(square as u8);
@@ -38,6 +46,7 @@ impl Board {
         self.bitboards[piece as usize].clear_bit(square as u8);
     }
 
+    #[allow(dead_code)]
     pub fn replace_piece(&mut self, piece: BoardPiece, square: Squares) {
         for p in BoardPiece::iter() {
             self.remove_piece(p, square);
@@ -143,6 +152,11 @@ impl Board {
     #[inline(always)]
     pub fn get_side_to_move(&self) -> Color {
         self.info.turn
+    }
+
+    #[inline(always)]
+    pub fn is_check(&self, gen: &MovGen) -> bool {
+        self.is_king_checked(self.info.turn, gen)
     }
 }
 
@@ -253,20 +267,24 @@ impl Board {
         self.info.castle.add(castle);
     }
 
+    // makes move and pushes it to history also logs it, shouldn't be used for search or perft testing because of performance overhead by logging
     #[inline(always)]
-    pub fn push_history(&mut self, mov: Option<MoveHistory>) {
-        if mov.is_none() {
-            return;
+    pub fn make(&mut self, mov: Move) {
+        let history = self.make_move(mov);
+        if history.is_some() {
+            log::info!("pushing {:?} to history", history.unwrap());
+            self.move_history.push(history.unwrap());
         }
-        self.move_history.push(mov.unwrap());
     }
 
+    // unmake move from history
     #[inline(always)]
-    pub fn undo_history(&mut self) {
+    pub fn unmake(&mut self) {
         let mov = self.move_history.pop();
         if mov.is_none() {
             return;
         }
+        log::info!("unmaking {:?} from history", mov.unwrap());
         self.unmake_move(mov.unwrap());
     }
 
@@ -290,7 +308,7 @@ impl Board {
                 self.make_double_pawn(mov);
             }
 
-            EnPassant(sq) => {
+            EnPassant => {
                 self.make_en_passant(mov);
             }
 
@@ -363,7 +381,7 @@ impl Board {
             DoublePawnPush => {
                 self.unmake_double_pawn(mov);
             }
-            EnPassant(_) => {
+            EnPassant => {
                 self.unmake_en_passant(mov);
             }
             Promotion(promoted_to) => {
@@ -509,9 +527,40 @@ impl FenParse<Fen, Board, FenParseError> for Board {
     }
 }
 
+// impl Display for Board {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         let mut board = String::new();
+//         for rank in (0..8).rev() {
+//             for file in 0..8 {
+//                 let mut piece: Option<BoardPiece> = None;
+//                 for i in 0..12 {
+//                     if self.bitboards[i].get_bit(rank * 8 + file) {
+//                         piece = Some(BoardPiece::from(i as u8));
+//                         break;
+//                     }
+//                 }
+//                 board.push_str(&format!(
+//                     "{} ",
+//                     match piece {
+//                         Some(p) => format!(" {}", p.unicode()),
+//                         None => " .".to_string(),
+//                     }
+//                 ));
+//                 if file == 7 {
+//                     board.push_str(&format!("\t{}", rank + 1));
+//                 }
+//             }
+//             board.push('\n');
+//         }
+//         board.push_str("\n a  b  c  d  e  f  g  h\n");
+//         write!(f, "{}", board)
+//     }
+// }
+
 impl Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut board = String::new();
+        board.push_str("+---+---+---+---+---+---+---+---+\n");
         for rank in (0..8).rev() {
             for file in 0..8 {
                 let mut piece: Option<BoardPiece> = None;
@@ -522,19 +571,19 @@ impl Display for Board {
                     }
                 }
                 board.push_str(&format!(
-                    "{} ",
+                    "| {} ",
                     match piece {
-                        Some(p) => format!(" {}", p.unicode()),
-                        None => " .".to_string(),
+                        Some(p) => p.to_string(),
+                        None => " ".to_string(),
                     }
                 ));
-                if file == 7 {
-                    board.push_str(&format!("\t{}", rank + 1));
-                }
             }
-            board.push('\n');
+            board.push_str(&format!("| {}\n", rank + 1));
+            board.push_str("+---+---+---+---+---+---+---+---+\n");
         }
-        board.push_str("\n a  b  c  d  e  f  g  h\n");
+        board.push_str("  a   b   c   d   e   f   g   h\n\n");
+        board.push_str(&format!("Fen: {}\n", self.to_fen()));
+        board.push_str(&format!("Key: {}\n", self.hash));
         write!(f, "{}", board)
     }
 }
@@ -542,6 +591,7 @@ impl Display for Board {
 impl Debug for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut board = String::new();
+        board.push_str("+---+---+---+---+---+---+---+---+\n");
         for rank in (0..8).rev() {
             for file in 0..8 {
                 let mut piece: Option<BoardPiece> = None;
@@ -552,20 +602,18 @@ impl Debug for Board {
                     }
                 }
                 board.push_str(&format!(
-                    "{} ",
+                    "| {} ",
                     match piece {
-                        Some(p) => format!(" {}", p.to_string()),
-                        None => " .".to_string(),
+                        Some(p) => p.to_string(),
+                        None => " ".to_string(),
                     }
                 ));
-
-                if file == 7 {
-                    board.push_str(&format!("\t{}", rank + 1));
-                }
             }
-            board.push_str("\n");
+            board.push_str(&format!("| {}\n", rank + 1));
+            board.push_str("+---+---+---+---+---+---+---+---+\n");
         }
-        board.push_str("\n a  b  c  d  e  f  g  h\n\n");
+
+        board.push_str("  a   b   c   d   e   f   g   h\n\n");
         let fen = self.to_fen();
         board.push_str(format!("Fen: {}\n", fen).as_str());
         board.push_str(format!("Hash: {}\n", self.hash).as_str());

@@ -14,8 +14,6 @@ pub struct Perft {
     checkmates: u64, //TODO: Add checkmate
 }
 
-
-
 impl Perft {
     pub fn check(
         &self,
@@ -157,7 +155,7 @@ pub fn perft_test(depth: u16, board: &mut Board, gen: &mut MovGen, nodes: &mut u
     *nodes = 0;
 
     // println!("Starting Perft Test to depth: {depth}");
-    gen.generate_moves( board);
+    gen.generate_moves(board);
     let moves_list = gen.move_list.clone();
     let time = std::time::Instant::now();
 
@@ -188,17 +186,17 @@ pub fn perft_test(depth: u16, board: &mut Board, gen: &mut MovGen, nodes: &mut u
 
 #[cfg(test)]
 mod tests {
-    use crate::kelp::board::fen::{FenParse, Fen};
-    use crate::kelp::kelp_core::lookup_table::LookupTable;
     use super::*;
+    use crate::kelp::board::fen::{Fen, FenParse};
+    use crate::kelp::kelp_core::lookup_table::LookupTable;
 
     #[test]
     fn start_pos_test() {
-        let mut board = Board::parse(Fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ".to_string())).unwrap();
+        let mut board = Board::parse(Fen(
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ".to_string(),
+        ))
+        .unwrap();
         let mut table = LookupTable::new();
         table.populate();
     }
 }
-
-
-

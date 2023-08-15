@@ -2,6 +2,7 @@ use crate::kelp::board::board::Board;
 use crate::kelp::board::moves::{CastlingRights, GenType};
 use crate::kelp::kelp_core::bitboard::BitBoard;
 use crate::kelp::kelp_core::lookup_table::LookupTable;
+use crate::kelp::Squares::{A7, E1, H7};
 use crate::kelp::{
     board::moves::{Move, MoveList, MoveType},
     board::piece::{
@@ -12,7 +13,6 @@ use crate::kelp::{
 };
 use log::info;
 use strum::IntoEnumIterator;
-use crate::kelp::Squares::{A7, E1, H7};
 
 pub struct MovGen<'a> {
     pub table: &'a LookupTable,
@@ -122,7 +122,13 @@ impl<'a> MovGen<'a> {
     }
 
     #[inline(always)]
-    fn generate_pawn_attacks(&mut self, target: Squares, source: Squares, side: Color, board: &Board) {
+    fn generate_pawn_attacks(
+        &mut self,
+        target: Squares,
+        source: Squares,
+        side: Color,
+        board: &Board,
+    ) {
         let piece = board.get_piece(target);
 
         if piece.is_some() {
@@ -176,7 +182,6 @@ impl<'a> MovGen<'a> {
                 }
             }
         }
-
     }
 
     #[inline(always)]
@@ -230,9 +235,7 @@ impl<'a> MovGen<'a> {
                         } else {
                             self.move_list.push(mv);
                         }
-
                     }
-
 
                     // Generate Pawn Captures
                     let attacks = self.table.get_pawn_attacks(White, sq);
@@ -247,7 +250,8 @@ impl<'a> MovGen<'a> {
 
                     // Generate En Passant Captures
                     if board.get_en_passant().is_some() {
-                        let en_passant = self.table.get_pawn_attacks(White, sq) & BitBoard::from(1u64 << (board.get_en_passant().unwrap() as u8));
+                        let en_passant = self.table.get_pawn_attacks(White, sq)
+                            & BitBoard::from(1u64 << (board.get_en_passant().unwrap() as u8));
                         if en_passant.0 != 0 {
                             let en_passant = Squares::from_repr(en_passant.get_lsb()).unwrap();
                             let mv = Move::new(
@@ -255,7 +259,7 @@ impl<'a> MovGen<'a> {
                                 en_passant,
                                 WhitePawn,
                                 Some(BlackPawn),
-                                MoveType::EnPassant(Some(en_passant)),
+                                MoveType::EnPassant,
                                 GenType::Capture,
                             );
                             self.move_list.push(mv);
@@ -264,10 +268,8 @@ impl<'a> MovGen<'a> {
                 }
             }
             Black => {
-
                 let bitboard = board.get_piece_occ(BlackPawn);
                 for sq in bitboard {
-
                     // Check if pawn is on the 8th rank or 1st rank
                     if sq >= 56 || sq <= 7 {
                         continue;
@@ -316,7 +318,6 @@ impl<'a> MovGen<'a> {
                         }
                     }
 
-
                     // Generate Black Pawn Captures
 
                     let attacks = self.table.get_pawn_attacks(Black, sq);
@@ -331,7 +332,8 @@ impl<'a> MovGen<'a> {
 
                     // Generate Black En Passant Captures
                     if board.get_en_passant().is_some() {
-                        let en_passant = self.table.get_pawn_attacks(Black, sq) & BitBoard::from(1u64 << (board.get_en_passant().unwrap() as u8));
+                        let en_passant = self.table.get_pawn_attacks(Black, sq)
+                            & BitBoard::from(1u64 << (board.get_en_passant().unwrap() as u8));
                         if en_passant != BitBoard::empty() {
                             let en_passant = Squares::from_repr(en_passant.get_lsb()).unwrap();
                             let mv = Move::new(
@@ -339,7 +341,7 @@ impl<'a> MovGen<'a> {
                                 en_passant,
                                 BlackPawn,
                                 Some(WhitePawn),
-                                MoveType::EnPassant(Some(en_passant)),
+                                MoveType::EnPassant,
                                 GenType::Capture,
                             );
                             self.move_list.push(mv);
@@ -351,7 +353,8 @@ impl<'a> MovGen<'a> {
     }
 
     #[inline(always)]
-    fn generate_castling_moves(&mut self, side: Color, board: &Board) { //TODO: make private
+    fn generate_castling_moves(&mut self, side: Color, board: &Board) {
+        //TODO: make private
         let castle = board.info.castle;
 
         match side {

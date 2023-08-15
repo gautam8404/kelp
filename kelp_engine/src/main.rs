@@ -12,22 +12,28 @@ use kelp::Squares::{self, *};
 use kelp::{BLACK_OCCUPIED, OCCUPIED, WHITE_OCCUPIED};
 use std::thread::sleep;
 
-use crate::kelp::board::piece::BoardPiece::{BlackPawn, BlackQueen, WhiteBishop, WhiteKing, WhiteKnight, WhitePawn, WhiteQueen, WhiteRook};
-use kelp::board::{board::Board, fen::Fen};
+use crate::kelp::board::piece::BoardPiece::{
+    BlackPawn, BlackQueen, WhiteBishop, WhiteKing, WhiteKnight, WhitePawn, WhiteQueen, WhiteRook,
+};
+use crate::kelp::kelp::Kelp;
 use crate::kelp::mov_gen::perft::*;
-
+use kelp::board::{board::Board, fen::Fen};
+use crate::kelp::UCI;
 
 fn ptest(gen: &mut MovGen) {
     use crate::kelp::mov_gen::perft::*;
     let starring_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     let args = std::env::args().collect::<Vec<String>>();
-    let depth = args.get(1).unwrap_or(&"4".to_string()).parse::<u16>().unwrap();
+    let depth = args
+        .get(1)
+        .unwrap_or(&"4".to_string())
+        .parse::<u16>()
+        .unwrap();
     let mut fen = args.get(2).unwrap_or(&starring_fen.to_string()).to_string();
 
     let mut board = Board::parse(Fen(fen)).unwrap();
     let mut nodes = 0;
-    perft_test(depth, &mut board, gen, &mut nodes )
-
+    perft_test(depth, &mut board, gen, &mut nodes)
 }
 fn main() {
     env_logger::init();
@@ -41,7 +47,12 @@ fn main() {
     let d_fen = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
 
     let mut table = LookupTable::new();
-    table.populate();
+    // table.populate();
+
+    let mut kelp = Kelp::new(&mut table);
+    let a = kelp.parse_move("a2a4");
+    println!("{:?}", a);
+    kelp.uci_loop();
 
     // let mut board = Board::parse(Fen(starring_fen.to_string()));
     // if board.is_err() {
@@ -53,8 +64,8 @@ fn main() {
     // println!("{}", board.get_piece(G6).unwrap());
     // println!("{}", board);
 
-    let mut movgen = MovGen::new(&table);
-    println!("{}", A5 as u8);
+    // let mut movgen = MovGen::new(&mut table);
+    // println!("{}", A5 as u8);
 
     // movgen.print_attacked(Color::White, &board);
     // println!("{}\n", board.get_piece_occ(BlackQueen));
@@ -90,36 +101,35 @@ fn main() {
     //     board.unmake_move(a.unwrap());
     // }
 
-
     // ptest(&mut movgen);
-    let args = std::env::args().collect::<Vec<String>>();
-    let depth = args.get(1).unwrap_or(&"4".to_string()).parse::<u16>().unwrap();
-    let mut fen = args.get(2).unwrap_or(&starring_fen.to_string()).to_string();
+    // let args = std::env::args().collect::<Vec<String>>();
+    // let depth = args.get(1).unwrap_or(&"4".to_string()).parse::<u16>().unwrap();
+    // let mut fen = args.get(2).unwrap_or(&starring_fen.to_string()).to_string();
+    // //
+    // let mut board = Board::parse(Fen(d_fen.to_string())).unwrap();
+    // // let mut board = Board::parse(Fen(empty.to_string())).unwrap();
+    // // board.add_piece(WhitePawn, H4);
+    // // board.add_piece(BlackPawn, A4);
+    // // board.set_en_passant(H3);
+    // // board.info.set_turn(Color::Black);
     //
-    let mut board = Board::parse(Fen(d_fen.to_string())).unwrap();
-    // let mut board = Board::parse(Fen(empty.to_string())).unwrap();
-    // board.add_piece(WhitePawn, H4);
-    // board.add_piece(BlackPawn, A4);
-    // board.set_en_passant(H3);
-    // board.info.set_turn(Color::Black);
-
-    // board.add_piece(WhiteKnight, H4 - 8);
-    println!("{:?}", board);
-    movgen.generate_moves(&board);
-
-    for i in movgen.move_list.iter() {
-        print!("{}  ", i);
-        println!("{:?}", i);
-    }
-    println!("{:?}", board.get_side_to_move());
-    println!("{}", board.is_king_checked(Color::White, &movgen));
-
-    for i in movgen.move_list.iter() {
-        let a = board.make_move(*i);
-        println!("{}", board.is_king_checked(board.get_side_to_move(), &movgen));
-        board.unmake_move(a.unwrap());
-
-    }
+    // // board.add_piece(WhiteKnight, H4 - 8);
+    // println!("{:?}", board);
+    // movgen.generate_moves(&board);
+    //
+    // for i in movgen.move_list.iter() {
+    //     print!("{}  ", i);
+    //     println!("{:?}", i);
+    // }
+    // println!("{:?}", board.get_side_to_move());
+    // println!("{}", board.is_king_checked(Color::White, &movgen));
+    //
+    // for i in movgen.move_list.iter() {
+    //     let a = board.make_move(*i);
+    //     println!("{}", board.is_king_checked(board.get_side_to_move(), &movgen));
+    //     board.unmake_move(a.unwrap());
+    //
+    // }
 
     // let mut empty_board = Board::parse(Fen(empty.to_string())).unwrap();
     // board.add_piece(WhiteKnight, E1);
@@ -152,7 +162,6 @@ fn main() {
     // println!("{}", new_bb);
     // let mut nodes = 0;
     // perft_test(depth, &mut board, &mut movgen, &mut nodes);
-
 
     // print!("{}", board.get_piece_at(Squares::E6).unwrap());
 }

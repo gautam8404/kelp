@@ -1,4 +1,5 @@
 use super::piece::{BoardPiece, Color};
+use crate::kelp::board::board::Board;
 use crate::kelp::board::piece::BoardPiece::{BlackPawn, WhitePawn};
 use crate::kelp::SideToMove::Black;
 use crate::kelp::{Squares, MAX_SIZE_MOVES_ARR};
@@ -79,7 +80,7 @@ impl Castle {
 pub enum MoveType {
     Normal,
     DoublePawnPush,
-    EnPassant(Option<Squares>),
+    EnPassant,
     Castle(CastlingRights),
     Promotion(Option<BoardPiece>),
 }
@@ -103,9 +104,15 @@ pub struct Move {
 impl Display for Move {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.move_type {
-            MoveType::EnPassant(ep_sq) => write!(f, "{}{}e.p.", self.from, self.to),
+            // MoveType::EnPassant => write!(f, "{}{}e.p.", self.from, self.to),
             MoveType::Promotion(Some(promotion)) => {
-                write!(f, "{}{}{}", self.from, self.to, promotion)
+                write!(
+                    f,
+                    "{}{}{}",
+                    self.from,
+                    self.to,
+                    promotion.to_string().to_lowercase()
+                )
             }
             _ => write!(f, "{}{}", self.from, self.to),
         }
@@ -170,7 +177,7 @@ impl Move {
     }
 
     pub fn is_en_passant(&self) -> bool {
-        matches!(self.move_type, MoveType::EnPassant(_))
+        matches!(self.move_type, MoveType::EnPassant)
     }
 
     pub fn is_castle(&self) -> bool {
