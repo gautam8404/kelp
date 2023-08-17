@@ -91,7 +91,7 @@ impl<'a> Kelp<'a> {
 
             self.send_info(
                 format!(
-                    "info depth {} score cp {} nodes {} time {} nps {} pv {}",
+                    "info depth {} score cp {} nodes {} time {}ms nps {} pv {}",
                     i,
                     score,
                     self.search.nodes,

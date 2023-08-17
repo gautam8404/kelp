@@ -207,7 +207,7 @@ impl Negamax {
         for i in 0..self.pv_length[0] {
             let pv_str = {
                 if self.pv_table[0][i].is_none() {
-                    break;
+                    continue;
                 }
                 self.pv_table[0][i].unwrap().to_string()
             };
@@ -219,6 +219,10 @@ impl Negamax {
 
     pub fn get_pv_table(&self, x: usize, y: usize) -> Option<Move> {
         self.pv_table[x][y]
+    }
+
+    pub fn get_pv_length(&self, x: usize) -> usize {
+        self.pv_length[x]
     }
 
 }
