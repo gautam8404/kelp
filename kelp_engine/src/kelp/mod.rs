@@ -2,7 +2,7 @@ pub mod board;
 pub mod kelp;
 pub mod kelp_core;
 pub mod mov_gen;
-mod search;
+pub mod search;
 pub mod uci_trait;
 
 use std::fmt::Debug;
@@ -118,6 +118,10 @@ impl Squares {
 
     pub fn file(&self) -> u8 {
         (self.to_index() % 8) as u8
+    }
+
+    pub fn mirror(&self) -> Squares {
+        MIRROR[self.to_index()]
     }
 }
 

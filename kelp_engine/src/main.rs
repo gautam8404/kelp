@@ -20,6 +20,10 @@ use crate::kelp::uci_trait::UCI;
 use kelp::board::{board::Board, fen::Fen};
 use simplelog::{Config, LevelFilter, WriteLogger};
 
+use crate::kelp::board::moves::Move;
+use crate::kelp::search::eval::eval;
+use crate::kelp::search::negamax::Negamax;
+
 fn ptest(gen: &mut MovGen) {
     use crate::kelp::mov_gen::perft::*;
     let starring_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -50,15 +54,36 @@ fn main() {
     let tricky = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ";
     let empty = "8/8/8/8/8/8/8/8 w KQ - 0 1";
 
-    let d_fen = "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1";
+    let d_fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1";
 
     let mut table = LookupTable::new();
     // table.populate();
 
     let mut kelp = Kelp::new(&mut table);
-    let a = kelp.parse_move("a2a4");
-    println!("{:?}", a);
-    kelp.uci_loop();
+    let mut search = Negamax::default();
+    // let a = kelp.parse_move("a2a4");
+    // println!("{:?}", a);
+
+    let mut debug = false;
+    if debug {
+        // kelp.handle_position(&["fen", starring_fen]);
+        // let mut best_move: Option<Move> = None;
+        // let score = search.negamax(-10000, 10000, 2, &mut kelp.board, &mut kelp.mov_gen, &mut best_move);
+        // println!("best move: {:?} score: {}", best_move, score);
+        kelp.handle_position(&["fen", tricky]);
+        kelp.mov_gen.generate_moves(&kelp.board);
+        let list = kelp.mov_gen.move_list.clone();
+        for i in list.iter() {
+            let a = kelp.board.make_move(*i, true);
+            if a.is_some() {
+                print!("{}  ", i);
+                println!("{:?}", i);
+                kelp.board.unmake_move(a.unwrap());
+            }
+        }
+    } else {
+        kelp.uci_loop();
+    }
 
     // let mut board = Board::parse(Fen(starring_fen.to_string()));
     // if board.is_err() {

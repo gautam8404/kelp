@@ -5,15 +5,24 @@ use super::mov_gen::generator::MovGen;
 use super::uci_trait::UCI;
 use crate::kelp::board::fen::{Fen, FenParse};
 use crate::kelp::board::piece::BoardPiece::{self, *};
+use crate::kelp::search::negamax::Negamax;
 use log;
 
-use rand::seq::SliceRandom; // just for a random game
+
+pub struct SearchMoveResult {
+    pub best_move: Option<Move>,
+    pub score: i32,
+    pub depth: usize,
+    pub nodes: u64,
+    pub time: std::time::Duration,
+}
 
 /// Main Implementation for all UCI commands also acts as a library for the engine
 /// Kelp contains the board and the mov_gen from kelp::board and kelp::mov_gen respectively
 pub struct Kelp<'a> {
     pub board: Board,
     pub mov_gen: MovGen<'a>,
+    pub search: Negamax,
 }
 
 impl<'a> Kelp<'a> {
@@ -23,6 +32,7 @@ impl<'a> Kelp<'a> {
         Kelp {
             board: Board::default(),
             mov_gen: MovGen::new(table),
+            search: Negamax::default(),
         }
     }
 
@@ -58,6 +68,71 @@ impl<'a> Kelp<'a> {
 
     pub fn get_fen(&self) -> String {
         self.board.to_fen()
+    }
+
+    // for uci only
+    #[inline(always)]
+    fn search_move(&mut self, depth: usize) -> Option<Move> {
+        self.search.reset();
+        let mut score = 0;
+
+        for i in 1..=depth {
+            self.search.nodes = 0;
+            let now = std::time::Instant::now();
+            score = self.search.negamax(
+                Negamax::MIN,
+                Negamax::MAX,
+                i,
+                &mut self.board,
+                &mut self.mov_gen,
+                0
+            );
+            let elapsed = now.elapsed();
+
+            self.send_info(
+                format!(
+                    "info depth {} score cp {} nodes {} time {} nps {} pv {}",
+                    i,
+                    score,
+                    self.search.nodes,
+                    elapsed.as_millis(),
+                    (self.search.nodes as f64 / elapsed.as_secs_f64()) as u64,
+                    self.search.get_pv_str(),
+                )
+                .as_str(),
+            );
+        }
+
+        self.search.get_pv_table(0, 0)
+    }
+
+    ///search move for library functions
+    #[inline(always)]
+    pub fn search_move_lib(&mut self, depth: usize) -> SearchMoveResult {
+        self.search.reset();
+        let mut score = 0;
+
+        for i in 1..=depth {
+            self.search.nodes = 0;
+            let now = std::time::Instant::now();
+            score = self.search.negamax(
+                Negamax::MIN,
+                Negamax::MAX,
+                i,
+                &mut self.board,
+                &mut self.mov_gen,
+                0
+            );
+            let elapsed = now.elapsed();
+        }
+
+        SearchMoveResult {
+            best_move: self.search.get_pv_table(0, 0),
+            score,
+            depth,
+            nodes: self.search.nodes,
+            time: std::time::Instant::now().elapsed(),
+        }
     }
 }
 
@@ -100,30 +175,22 @@ impl UCI for Kelp<'_> {
     }
 
     fn handle_go(&mut self, arg: &[&str]) {
-        self.mov_gen.generate_moves(&self.board);
+        // TODO: replace this function with a better one
+        let mut depth = 0;
 
-        // let mv = self.parse_move("a2a4");
-        // if mv.is_none() {
-        //     self.send_bestmove("a2a4");
-        //     return;
-        // }
-
-        let mut random_move;
-
-        loop {
-            random_move = *self
-                .mov_gen
-                .move_list
-                .0
-                .choose(&mut rand::thread_rng())
-                .unwrap();
-
-            if self.make_move(random_move) {
-                break;
-            }
+        // check for depth command
+        if arg.len() > 1 && arg[0] == "depth" {
+            depth = arg[1].parse::<usize>().unwrap();
+        } else {
+            depth = 4;
         }
 
-        self.send_bestmove(random_move.to_string().as_str());
+        let best_move = self.search_move(depth);
+        if best_move.is_none() {
+            self.send("bestmove (none)");
+        } else {
+            self.send(format!("bestmove {}", best_move.unwrap()).as_str());
+        }
     }
 
     fn handle_uci(&self, arg: &[&str]) {
