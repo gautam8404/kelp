@@ -56,7 +56,7 @@ fn main() {
 
     let d_fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1";
 
-    let mut table = LookupTable::new();
+    let mut table = Box::new(LookupTable::new());
     // table.populate();
 
     let mut kelp = Kelp::new(&mut table);
