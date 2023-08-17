@@ -89,6 +89,16 @@ impl<'a> Kelp<'a> {
             );
             let elapsed = now.elapsed();
 
+            let mut pvstr = String::new();
+            for j in  0..self.search.get_pv_length(0) {
+                let mv = self.search.get_pv_table(0, j);
+                if mv.is_none() {
+                    continue;
+                }
+                pvstr.push_str(&mv.unwrap().to_string());
+                pvstr.push(' ');
+            }
+
             self.send_info(
                 format!(
                     "info depth {} score cp {} nodes {} time {}ms nps {} pv {}",

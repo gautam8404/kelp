@@ -64,23 +64,24 @@ fn main() {
     // let a = kelp.parse_move("a2a4");
     // println!("{:?}", a);
 
-    let mut debug = false;
+    let mut debug = true;
     if debug {
         // kelp.handle_position(&["fen", starring_fen]);
         // let mut best_move: Option<Move> = None;
         // let score = search.negamax(-10000, 10000, 2, &mut kelp.board, &mut kelp.mov_gen, &mut best_move);
         // println!("best move: {:?} score: {}", best_move, score);
         kelp.handle_position(&["fen", tricky]);
-        kelp.mov_gen.generate_moves(&kelp.board);
-        let list = kelp.mov_gen.move_list.clone();
-        for i in list.iter() {
-            let a = kelp.board.make_move(*i, true);
-            if a.is_some() {
-                print!("{}  ", i);
-                println!("{:?}", i);
-                kelp.board.unmake_move(a.unwrap());
-            }
-        }
+        kelp.handle_go(&["depth", "5"]);
+        // kelp.mov_gen.generate_moves(&kelp.board);
+        // let list = kelp.mov_gen.move_list.clone();
+        // for i in list.iter() {
+        //     let a = kelp.board.make_move(*i, true);
+        //     if a.is_some() {
+        //         print!("{}  ", i);
+        //         println!("{:?}", i);
+        //         kelp.board.unmake_move(a.unwrap());
+        //     }
+        // }
     } else {
         kelp.uci_loop();
     }

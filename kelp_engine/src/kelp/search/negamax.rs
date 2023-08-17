@@ -33,7 +33,7 @@ impl Negamax {
     pub const MATE_SCORE: i32 = -49000;
 
     #[inline(always)]
-    fn score_move(&mut self, mov: &Move, ply: usize) -> i32 {
+    fn score_move(&self, mov: &Move, ply: usize) -> i32 {
         if mov.capture.is_some() {
             return get_mvv_lva(mov) + 10000;
         } else if self.killer_moves[0][ply] == Some(*mov) {
@@ -52,12 +52,12 @@ impl Negamax {
         depth: usize,
         board: &mut Board,
         gen: &mut MovGen,
-        mut ply: usize,
+        ply: usize,
     ) -> i32 {
         self.pv_length[ply] = ply;
 
         if depth == 0 {
-            return self.quiescence(alpha, beta, board, gen, ply);
+            return self.quiescence(alpha, beta, board, gen, ply + 1);
         }
 
         if ply >= Self::MAX_DEPTH - 1 {
@@ -78,24 +78,20 @@ impl Negamax {
         });
 
         for moves in moves_list.iter() {
-            ply += 1;
 
             let a = board.make_move(*moves, false);
             if a.is_none() {
-                ply -= 1;
                 continue;
             }
 
             if board.is_check_opp(gen) {
                 board.unmake_move(a.unwrap());
-                ply -= 1;
                 continue;
             }
 
             legal_moves += 1;
-            score = i32::max(score, -self.negamax(-beta, -alpha, depth - 1, board, gen, ply));
+            score = i32::max(score, -self.negamax(-beta, -alpha, depth - 1, board, gen, ply + 1));
 
-            ply -= 1;
             board.unmake_move(a.unwrap());
 
             if score >= beta {
@@ -115,7 +111,7 @@ impl Negamax {
 
                 self.pv_table[ply][ply] = Some(*moves);
 
-                for i in (ply + 1)..self.pv_length[ply as usize] {
+                for i in (ply + 1)..self.pv_length[ply + 1] {
                     self.pv_table[ply][i] = self.pv_table[ply + 1][i];
                 }
 
@@ -141,7 +137,7 @@ impl Negamax {
         beta: i32,
         board: &mut Board,
         gen: &mut MovGen,
-        mut ply: usize,
+        ply: usize,
     ) -> i32 {
         self.nodes += 1;
         let eval = eval(board);
@@ -161,21 +157,17 @@ impl Negamax {
         });
 
         for m in moves_list.iter() {
-            ply += 1;
 
             let a = board.make_move(*m, true);
             if a.is_none() {
-                ply -= 1;
                 continue;
             }
             if board.is_check_opp(gen) {
                 board.unmake_move(a.unwrap());
-                ply -= 1;
                 continue;
             }
 
-            let score = -self.quiescence(-beta, -alpha, board, gen, ply);
-            ply -= 1;
+            let score = -self.quiescence(-beta, -alpha, board, gen, ply + 1);
 
             board.unmake_move(a.unwrap());
 
@@ -223,6 +215,14 @@ impl Negamax {
 
     pub fn get_pv_length(&self, x: usize) -> usize {
         self.pv_length[x]
+    }
+
+    pub fn print_move_scores(&self, board: &Board, gen: &mut MovGen, ply: usize) {
+        let mut moves_list = gen.move_list.clone();
+
+        for moves in moves_list.iter() {
+            println!("{}: {}", moves, self.score_move(moves, ply));
+        }
     }
 
 }
