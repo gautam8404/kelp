@@ -78,23 +78,32 @@ impl<'a> Kelp<'a> {
         self.search.reset();
         let mut score = 0;
 
+        let mut alpha = Negamax::MIN;
+        let mut beta = Negamax::MAX;
+
         //Iterative Deepening
         for i in 1..=depth {
             self.search.nodes = 0;
             self.search.follow_pv = true;
             let now = std::time::Instant::now();
-
-            let alpha = Negamax::MIN;
-            let beta = Negamax::MAX;
-
             score = self.search.negamax(
-                Negamax::MIN,
-                Negamax::MAX,
+                alpha,
+                beta,
                 i,
                 &mut self.board,
                 &mut self.mov_gen,
                 0
             );
+
+            if (score <= alpha) || (score >= beta) {
+                alpha = Negamax::MIN;
+                beta = Negamax::MAX;
+                continue;
+            }
+
+            alpha = score - Self::ASPIRATION_WINDOW;
+            beta = score + Self::ASPIRATION_WINDOW;
+
             let elapsed = now.elapsed();
 
             self.send_info(
@@ -120,18 +129,30 @@ impl<'a> Kelp<'a> {
         self.search.reset();
         let mut score = 0;
 
+        let mut alpha = Negamax::MIN;
+        let mut beta = Negamax::MAX;
+
         for i in 1..=depth {
             self.search.nodes = 0;
             let now = std::time::Instant::now();
             score = self.search.negamax(
-                Negamax::MIN,
-                Negamax::MAX,
+                alpha,
+                beta,
                 i,
                 &mut self.board,
                 &mut self.mov_gen,
                 0
             );
-            let elapsed = now.elapsed();
+
+            if (score <= alpha) || (score >= beta) {
+                alpha = Negamax::MIN;
+                beta = Negamax::MAX;
+                continue;
+            }
+
+            alpha = score - Self::ASPIRATION_WINDOW;
+            beta = score + Self::ASPIRATION_WINDOW;
+
         }
 
         SearchMoveResult {
