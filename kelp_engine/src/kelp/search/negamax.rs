@@ -11,6 +11,8 @@ pub struct Negamax {
     history_moves: [[i32; 64]; 12],
     pv_length: [usize; Self::MAX_DEPTH],
     pv_table: [[Option<Move>; Self::MAX_DEPTH]; Self::MAX_DEPTH],
+    pub follow_pv: bool,
+    pub score_pv: bool,
 }
 
 impl Default for Negamax {
@@ -22,6 +24,8 @@ impl Default for Negamax {
             history_moves: [[0; 64]; 12],
             pv_length: [0; Self::MAX_DEPTH],
             pv_table: [[None; Self::MAX_DEPTH]; Self::MAX_DEPTH],
+            follow_pv: false,
+            score_pv: false,
         }
     }
 }
@@ -33,9 +37,14 @@ impl Negamax {
     pub const MATE_SCORE: i32 = -49000;
 
     #[inline(always)]
-    fn score_move(&self, mov: &Move, ply: usize) -> i32 {
+    fn score_move(&mut self, mov: &Move, ply: usize) -> i32 {
+        if self.score_pv && self.pv_table[0][ply] == Some(*mov) {
+            self.score_pv = false;
+            return 20000;
+        }
+
         if mov.capture.is_some() {
-            return get_mvv_lva(mov) + 10000;
+            get_mvv_lva(mov) + 10000
         } else if self.killer_moves[0][ply] == Some(*mov) {
             return 9000;
         } else if self.killer_moves[1][ply] == Some(*mov) {
@@ -70,6 +79,15 @@ impl Negamax {
         gen.generate_moves(board);
         let mut moves_list = gen.move_list.clone();
         let mut legal_moves = 0;
+
+        if self.follow_pv {
+            if moves_list.iter().any(|x| self.pv_table[0][ply] == Some(*x)) {
+                self.score_pv = true;
+                self.follow_pv = true;
+            } else {
+                self.follow_pv = false;
+            }
+        }
 
         let mut score = Self::MIN;
         moves_list.0.sort_by(|a, b| {
@@ -192,6 +210,8 @@ impl Negamax {
         self.history_moves = [[0; 64]; 12];
         self.pv_length = [0; Self::MAX_DEPTH];
         self.pv_table = [[None; Self::MAX_DEPTH]; Self::MAX_DEPTH];
+        self.follow_pv = false;
+        self.score_pv = false;
     }
 
     pub fn get_pv_str(&self) -> String {
@@ -217,7 +237,7 @@ impl Negamax {
         self.pv_length[x]
     }
 
-    pub fn print_move_scores(&self, board: &Board, gen: &mut MovGen, ply: usize) {
+    pub fn print_move_scores(&mut self, board: &Board, gen: &mut MovGen, ply: usize) {
         let mut moves_list = gen.move_list.clone();
 
         for moves in moves_list.iter() {

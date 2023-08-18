@@ -15,6 +15,7 @@
     <list default="true" id="f2d4903a-89c8-4b37-ab92-16886ff7428e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/mov_gen/perft.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/mov_gen/perft.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/search/negamax.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/negamax.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/main.rs" afterDir="false" />
     </list>
@@ -81,7 +82,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.Run (engine)">
+  <component name="RunManager" selected="Cargo.Run Release (engine)">
     <configuration name="Build Dev (engine)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="build --bin kelp_engine --package kelp_engine" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -99,6 +100,21 @@
     </configuration>
     <configuration name="Build Release (engine)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="build --release --bin kelp_engine --package kelp_engine" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="emulateTerminal" value="false" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Build Release (windows)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value=" build --release --target x86_64-pc-windows-gnu   " />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="emulateTerminal" value="false" />
       <option name="channel" value="DEFAULT" />
@@ -188,6 +204,7 @@
       <item itemvalue="Cargo.Run Release (engine)" />
       <item itemvalue="Cargo.Build Dev (engine)" />
       <item itemvalue="Cargo.Build Release (engine)" />
+      <item itemvalue="Cargo.Build Release (windows)" />
       <item itemvalue="Cargo.Run (perft)" />
       <item itemvalue="Cargo.Expand kelp_engine::kelp::search::negamax" />
     </list>
@@ -250,6 +267,7 @@
       <workItem from="1692182086873" duration="17517000" />
       <workItem from="1692220214191" duration="1316000" />
       <workItem from="1692266276268" duration="14392000" />
+      <workItem from="1692299918891" duration="8997000" />
     </task>
     <servers />
   </component>
@@ -295,9 +313,14 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/kelp_engine/src/main.rs</url>
+          <line>35</line>
+          <option name="timeStamp" value="10" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/kelp_engine/src/kelp/search/negamax.rs</url>
-          <line>39</line>
-          <option name="timeStamp" value="8" />
+          <line>42</line>
+          <option name="timeStamp" value="12" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

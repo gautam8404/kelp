@@ -56,7 +56,7 @@ fn main() {
 
     let d_fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1";
 
-    let mut table = Box::new(LookupTable::new());
+    let mut table = LookupTable::new();
     // table.populate();
 
     let mut kelp = Kelp::new(&mut table);
@@ -64,7 +64,7 @@ fn main() {
     // let a = kelp.parse_move("a2a4");
     // println!("{:?}", a);
 
-    let mut debug = true;
+    let debug = false;
     if debug {
         // kelp.handle_position(&["fen", starring_fen]);
         // let mut best_move: Option<Move> = None;

@@ -76,8 +76,10 @@ impl<'a> Kelp<'a> {
         self.search.reset();
         let mut score = 0;
 
+        //Iterative Deepening
         for i in 1..=depth {
             self.search.nodes = 0;
+            self.search.follow_pv = true;
             let now = std::time::Instant::now();
             score = self.search.negamax(
                 Negamax::MIN,
@@ -89,19 +91,9 @@ impl<'a> Kelp<'a> {
             );
             let elapsed = now.elapsed();
 
-            let mut pvstr = String::new();
-            for j in  0..self.search.get_pv_length(0) {
-                let mv = self.search.get_pv_table(0, j);
-                if mv.is_none() {
-                    continue;
-                }
-                pvstr.push_str(&mv.unwrap().to_string());
-                pvstr.push(' ');
-            }
-
             self.send_info(
                 format!(
-                    "info depth {} score cp {} nodes {} time {}ms nps {} pv {}",
+                    "depth {} score cp {} nodes {} time {} nps {} pv {}",
                     i,
                     score,
                     self.search.nodes,
