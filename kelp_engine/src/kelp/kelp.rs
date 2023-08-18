@@ -26,6 +26,8 @@ pub struct Kelp<'a> {
 }
 
 impl<'a> Kelp<'a> {
+    const ASPIRATION_WINDOW: i32 = 50;
+
     ///Creates a new instance of Kelp, populates the lookup table in case if its not populated beforehand
     pub(crate) fn new(table: &'a mut LookupTable) -> Self {
         table.populate();
@@ -81,6 +83,10 @@ impl<'a> Kelp<'a> {
             self.search.nodes = 0;
             self.search.follow_pv = true;
             let now = std::time::Instant::now();
+
+            let alpha = Negamax::MIN;
+            let beta = Negamax::MAX;
+
             score = self.search.negamax(
                 Negamax::MIN,
                 Negamax::MAX,

@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::kelp::board::board::Board;
-use crate::kelp::board::moves::Move;
+use crate::kelp::board::moves::{Move, MoveType};
 use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::search::eval::{eval, get_mvv_lva};
 
@@ -35,6 +35,8 @@ impl Negamax {
     pub const MAX: i32 = 50000;
     pub const MAX_DEPTH: usize = 64;
     pub const MATE_SCORE: i32 = -49000;
+    const NULL_MOVE_REDUCTION: usize = 3;
+    const FULL_DEPTH: usize = 4;
 
     #[inline(always)]
     fn score_move(&mut self, mov: &Move, ply: usize) -> i32 {
@@ -63,6 +65,7 @@ impl Negamax {
         gen: &mut MovGen,
         ply: usize,
     ) -> i32 {
+
         self.pv_length[ply] = ply;
 
         if depth == 0 {
@@ -75,6 +78,18 @@ impl Negamax {
 
         self.nodes += 1;
         let in_check = board.is_check(gen);
+
+        if depth >=3 && in_check == false && ply != 0 {
+            let enpassant = board.make_null_move();
+
+            let score = -self.negamax(-beta, -beta + 1, depth - 3, board, gen, ply + 1);
+
+            board.unmake_null_move(enpassant);
+
+            if score >= beta {
+                return beta;
+            }
+        }
 
         gen.generate_moves(board);
         let mut moves_list = gen.move_list.clone();
@@ -90,13 +105,13 @@ impl Negamax {
         }
 
         let mut score = Self::MIN;
-        moves_list.0.sort_by(|a, b| {
-            self.score_move(b, ply)
-                .cmp(&self.score_move(a, ply))
-        });
+        moves_list
+            .0
+            .sort_by(|a, b| self.score_move(b, ply).cmp(&self.score_move(a, ply)));
+
+        let mut moves_searched = 0;
 
         for moves in moves_list.iter() {
-
             let a = board.make_move(*moves, false);
             if a.is_none() {
                 continue;
@@ -108,9 +123,39 @@ impl Negamax {
             }
 
             legal_moves += 1;
-            score = i32::max(score, -self.negamax(-beta, -alpha, depth - 1, board, gen, ply + 1));
+
+            if moves_searched == 0 {
+                score = -self.negamax(-beta, -alpha, depth - 1, board, gen, ply + 1);
+            } else {
+                if moves_searched >= Self::FULL_DEPTH
+                    && depth >= Self::NULL_MOVE_REDUCTION
+                    && in_check == false
+                    && moves.capture.is_none()
+                    && moves.is_promotion() == false {
+                    score = -self.negamax(
+                        -alpha - 1,
+                        -alpha,
+                        depth - 2,
+                        board,
+                        gen,
+                        ply + 1,
+                    );
+                } else {
+                    score = alpha + 1;
+                }
+
+                if score > alpha {
+                    score = -self.negamax(-alpha - 1, -alpha, depth - 1, board, gen, ply + 1);
+
+                    if (score > alpha) && (score < beta) {
+                        score = -self.negamax(-beta, -alpha, depth - 1, board, gen, ply + 1);
+                    }
+                }
+            }
 
             board.unmake_move(a.unwrap());
+
+            moves_searched += 1;
 
             if score >= beta {
                 if moves.capture.is_none() {
@@ -142,7 +187,7 @@ impl Negamax {
                 Self::MATE_SCORE + ply as i32
             } else {
                 0
-            }
+            };
         }
 
         alpha
@@ -175,7 +220,6 @@ impl Negamax {
         });
 
         for m in moves_list.iter() {
-
             let a = board.make_move(*m, true);
             if a.is_none() {
                 continue;
@@ -244,5 +288,4 @@ impl Negamax {
             println!("{}: {}", moves, self.score_move(moves, ply));
         }
     }
-
 }

@@ -5,7 +5,7 @@ use super::piece::{
     BoardPiece::{self, *},
     Color,
 };
-use crate::kelp::board::moves::{Move, MoveArray, MoveHistory, MoveType};
+use crate::kelp::board::moves::{GenType, Move, MoveArray, MoveHistory, MoveType};
 use crate::kelp::board::piece::Color::*;
 use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::Squares::{self, *};
@@ -413,6 +413,19 @@ impl Board {
         if color == Black && self.info.fullmove_clock > 1 {
             self.info.fullmove_clock -= 1;
         }
+    }
+
+    pub fn make_null_move(&mut self) -> Option<Squares> {
+        let mut old_en_passant = self.info.en_passant;
+        self.info.en_passant = None;
+        self.info.turn = !self.info.turn;
+
+        old_en_passant
+    }
+
+    pub fn unmake_null_move(&mut self, en_passant: Option<Squares>) {
+        self.info.en_passant = en_passant;
+        self.info.turn = !self.info.turn;
     }
 }
 
