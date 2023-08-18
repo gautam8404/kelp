@@ -5,11 +5,11 @@ pub trait UCI {
 
     fn handle_uci(&self, arg: &[&str]);
 
-    fn handle_quit(&self, arg: &[&str]);
+    fn handle_quit(&self);
 
-    fn handle_stop(&self, arg: &[&str]);
+    fn handle_stop(&self);
 
-    fn handle_ready(&self, arg: &[&str]);
+    fn handle_ready(&self);
 
     // To handle commands that are not implemented by default in trait
     fn handle_unknown(&self, command: &str, arg: &[&str]);
@@ -55,9 +55,9 @@ pub trait UCI {
             "position" => self.handle_position(&args),
             "go" => self.handle_go(&args),
             "uci" => self.handle_uci(&args),
-            "quit" => self.handle_quit(&args),
-            "stop" => self.handle_stop(&args),
-            "isready" => self.handle_ready(&args),
+            "quit" => self.handle_quit(),
+            "stop" => self.handle_stop(),
+            "isready" => self.handle_ready(),
             "ucinewgame" => self.handle_position(["startpos"].as_ref()),
             "d" => self.print_board(),
             _ => self.handle_unknown(command, &args),

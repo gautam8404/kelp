@@ -7,6 +7,9 @@ use crate::kelp::board::fen::{Fen, FenParse};
 use crate::kelp::board::piece::BoardPiece::{self, *};
 use crate::kelp::search::negamax::Negamax;
 use log;
+use std::sync::atomic::{AtomicBool, Ordering};
+
+pub static STOP: AtomicBool = AtomicBool::new(false);
 
 
 pub struct SearchMoveResult {
@@ -222,21 +225,25 @@ impl UCI for Kelp<'_> {
         }
     }
 
+    // fn handle_go(&mut self, arg: &[&str]) {
+    //     todo!()
+    // }
+
     fn handle_uci(&self, arg: &[&str]) {
         self.send("id name Kelp Engine");
         self.send("id author Gautam Dhingra");
         self.send("uciok");
     }
 
-    fn handle_quit(&self, arg: &[&str]) {
+    fn handle_quit(&self) {
         std::process::exit(0);
     }
 
-    fn handle_stop(&self, arg: &[&str]) {
-        todo!()
+    fn handle_stop(&self) {
+        STOP.store(true, Ordering::Relaxed);
     }
 
-    fn handle_ready(&self, arg: &[&str]) {
+    fn handle_ready(&self) {
         self.send("readyok"); //TODO: Implement this
     }
 

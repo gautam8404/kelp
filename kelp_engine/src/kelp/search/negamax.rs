@@ -1,7 +1,5 @@
-use std::time::Duration;
-
 use crate::kelp::board::board::Board;
-use crate::kelp::board::moves::{Move, MoveType};
+use crate::kelp::board::moves::{Move};
 use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::search::eval::{eval, get_mvv_lva};
 
@@ -55,7 +53,7 @@ impl Negamax {
             return self.history_moves[mov.piece as usize][mov.to as usize];
         }
     }
-    #[inline(always)] //TODO: refractor and improve
+    #[inline(always)]
     pub fn negamax(
         &mut self,
         mut alpha: i32,
@@ -79,6 +77,7 @@ impl Negamax {
         self.nodes += 1;
         let in_check = board.is_check(gen);
 
+        //Null Move Pruning
         if depth >=3 && in_check == false && ply != 0 {
             let enpassant = board.make_null_move();
 
@@ -126,7 +125,7 @@ impl Negamax {
 
             if moves_searched == 0 {
                 score = -self.negamax(-beta, -alpha, depth - 1, board, gen, ply + 1);
-            } else {
+            } else { //Late Move Reduction
                 if moves_searched >= Self::FULL_DEPTH
                     && depth >= Self::NULL_MOVE_REDUCTION
                     && in_check == false
@@ -144,6 +143,7 @@ impl Negamax {
                     score = alpha + 1;
                 }
 
+                // PVS
                 if score > alpha {
                     score = -self.negamax(-alpha - 1, -alpha, depth - 1, board, gen, ply + 1);
 
@@ -244,10 +244,6 @@ impl Negamax {
         alpha
     }
 
-    pub fn get_nodes(&self) -> u64 {
-        self.nodes
-    }
-
     pub fn reset(&mut self) {
         self.nodes = 0;
         self.killer_moves = [[None; Self::MAX_DEPTH]; 2];
@@ -277,12 +273,14 @@ impl Negamax {
         self.pv_table[x][y]
     }
 
+    #[allow(dead_code)]
     pub fn get_pv_length(&self, x: usize) -> usize {
         self.pv_length[x]
     }
 
-    pub fn print_move_scores(&mut self, board: &Board, gen: &mut MovGen, ply: usize) {
-        let mut moves_list = gen.move_list.clone();
+    #[allow(dead_code)]
+    pub fn print_move_scores(&mut self, gen: &mut MovGen, ply: usize) {
+        let moves_list = gen.move_list.clone();
 
         for moves in moves_list.iter() {
             println!("{}: {}", moves, self.score_move(moves, ply));
