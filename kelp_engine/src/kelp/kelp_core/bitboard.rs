@@ -4,7 +4,7 @@ use std::ops::{
     Shr, ShrAssign,
 };
 
-#[derive(Debug, Clone, Copy, Eq)]
+#[derive(Debug, Clone, Copy, Eq, Default)]
 pub struct BitBoard(pub u64);
 
 impl BitBoard {

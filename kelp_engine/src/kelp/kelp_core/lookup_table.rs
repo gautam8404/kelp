@@ -6,16 +6,20 @@ use crate::kelp::board::piece::Color;
 use log::info;
 
 pub struct LookupTable {
-    pawn_attacks: [[BitBoard; 64]; 2],
-    knight_attacks: [BitBoard; 64],
-    king_attacks: [BitBoard; 64],
+    pawn_attacks: Vec<Vec<BitBoard>>,
+    knight_attacks: Vec<BitBoard>,
+    king_attacks: Vec<BitBoard>,
 
-    bishop_masks: [BitBoard; 64],
-    rook_masks: [BitBoard; 64],
-    bishop_attacks: [[BitBoard; 512]; 64],
-    rook_attacks: [[BitBoard; 4096]; 64],
+    bishop_attacks: Vec<Vec<BitBoard>>,
+    rook_attacks: Vec<Vec<BitBoard>>,
 
     magic_table: MagicTable,
+}
+
+impl Default for LookupTable {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl LookupTable {
@@ -66,13 +70,11 @@ impl LookupTable {
 
     pub fn new() -> LookupTable {
         LookupTable {
-            pawn_attacks: [[BitBoard(0); 64]; 2],
-            knight_attacks: [BitBoard(0); 64],
-            king_attacks: [BitBoard(0); 64],
-            bishop_masks: [BitBoard(0); 64],
-            rook_masks: [BitBoard(0); 64],
-            bishop_attacks: [[BitBoard(0); 512]; 64],
-            rook_attacks: [[BitBoard(0); 4096]; 64],
+            pawn_attacks: vec![vec![BitBoard(0); 64]; 2],
+            knight_attacks: vec![BitBoard(0); 64],
+            king_attacks: vec![BitBoard(0); 64],
+            bishop_attacks: vec![vec![BitBoard(0); 512]; 64],
+            rook_attacks: vec![vec![BitBoard(0); 4096]; 64],
             magic_table: MagicTable::new(),
         }
     }

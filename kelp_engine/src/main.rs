@@ -85,7 +85,7 @@ fn main() {
         //     }
         // }
     } else {
-        let mut table = LookupTable::new();
+        let mut table = LookupTable::default();
         let mut kelp = Kelp::new(&mut table);
         kelp.uci_loop();
         // let (tx, rx) = mpsc::channel();
