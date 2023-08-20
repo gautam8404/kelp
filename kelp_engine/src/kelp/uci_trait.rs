@@ -1,3 +1,5 @@
+use std::sync::mpsc;
+
 /// UCI trait, implements basic functions for UCI protocol, all handle_* functions are passed with array of args excluding the keyword
 pub trait UCI {
     fn handle_position(&mut self, arg: &[&str]);
@@ -81,6 +83,7 @@ pub trait UCI {
         self.send(format!("info {}", info).as_str());
     }
 
+    // a very basic uci loop, can be overriden
     fn uci_loop(&mut self) {
         loop {
             let mut input = String::new();
@@ -88,6 +91,7 @@ pub trait UCI {
             self.receive(input.trim());
         }
     }
+
 
     fn log_stdio(&self, arg: &str) {} // Optional function to log stdio
 }

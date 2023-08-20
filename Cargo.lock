@@ -43,6 +43,7 @@ version = "0.1.0"
 dependencies = [
  "log",
  "rand",
+ "rand_chacha",
  "simplelog",
  "strum",
  "strum_macros",

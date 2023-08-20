@@ -9,6 +9,9 @@ use crate::kelp::mov_gen::generator::MovGen;
 use kelp::kelp_core::bitboard::BitBoard;
 use kelp::kelp_core::lookup_table::LookupTable;
 use kelp::Squares::{self, *};
+use std::sync::atomic::Ordering;
+use std::sync::{mpsc, Arc, Mutex};
+use std::thread;
 use std::thread::sleep;
 
 use crate::kelp::board::piece::BoardPiece::{
@@ -23,6 +26,7 @@ use simplelog::{Config, LevelFilter, WriteLogger};
 use crate::kelp::board::moves::Move;
 use crate::kelp::search::eval::eval;
 use crate::kelp::search::negamax::Negamax;
+use kelp::STOP;
 
 fn ptest(gen: &mut MovGen) {
     use crate::kelp::mov_gen::perft::*;
@@ -56,10 +60,8 @@ fn main() {
 
     let d_fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1";
 
-    let mut table = LookupTable::new();
     // table.populate();
 
-    let mut kelp = Kelp::new(&mut table);
     let mut search = Negamax::default();
     // let a = kelp.parse_move("a2a4");
     // println!("{:?}", a);
@@ -70,8 +72,8 @@ fn main() {
         // let mut best_move: Option<Move> = None;
         // let score = search.negamax(-10000, 10000, 2, &mut kelp.board, &mut kelp.mov_gen, &mut best_move);
         // println!("best move: {:?} score: {}", best_move, score);
-        kelp.handle_position(&["fen", tricky]);
-        kelp.handle_go(&["depth", "5"]);
+        // kelp.handle_position(&["fen", tricky]);
+        // kelp.handle_go(&["depth", "5"]);
         // kelp.mov_gen.generate_moves(&kelp.board);
         // let list = kelp.mov_gen.move_list.clone();
         // for i in list.iter() {
@@ -83,7 +85,34 @@ fn main() {
         //     }
         // }
     } else {
+        let mut table = LookupTable::new();
+        let mut kelp = Kelp::new(&mut table);
         kelp.uci_loop();
+        // let (tx, rx) = mpsc::channel();
+        // let shared_input = Arc::new(Mutex::new(String::new()));
+        //
+        // // Start the input thread
+        // let io_thread = thread::spawn(move || {
+        //     loop {
+        //         let mut input = String::new();
+        //         std::io::stdin().read_line(&mut input).unwrap();
+        //
+        //         if input.trim() == "stop" {
+        //             STOP.store(true, Ordering::Relaxed);
+        //             println!("stop\n\n\n\n\n\n\n\n\nn\n\n");
+        //             continue;
+        //         }
+        //         if input.trim() == "quit" {
+        //             STOP.store(true, Ordering::Relaxed); //stop engine then pass quit to uci loop
+        //         }
+        //         tx.send(input).unwrap();
+        //     }
+        // });
+        //
+        // // Start the UCI loop in the main thread
+        // kelp.uci_loop(&rx, &shared_input);
+        //
+        // io_thread.join().unwrap();
     }
 
     // let mut board = Board::parse(Fen(starring_fen.to_string()));

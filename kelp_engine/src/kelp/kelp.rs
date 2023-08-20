@@ -3,14 +3,14 @@ use super::board::moves::Move;
 use super::kelp_core::lookup_table::LookupTable;
 use super::mov_gen::generator::MovGen;
 use super::uci_trait::UCI;
+use super::{STOP};
 use crate::kelp::board::fen::{Fen, FenParse};
 use crate::kelp::board::piece::BoardPiece::{self, *};
 use crate::kelp::search::negamax::Negamax;
 use log;
-use std::sync::atomic::{AtomicBool, Ordering};
-
-pub static STOP: AtomicBool = AtomicBool::new(false);
-
+use std::sync::atomic::Ordering;
+use std::sync::mpsc;
+use std::thread;
 
 pub struct SearchMoveResult {
     pub best_move: Option<Move>,
@@ -84,19 +84,21 @@ impl<'a> Kelp<'a> {
         let mut alpha = Negamax::MIN;
         let mut beta = Negamax::MAX;
 
+        let mut previous_best_move = None;
+
         //Iterative Deepening
         for i in 1..=depth {
             self.search.nodes = 0;
             self.search.follow_pv = true;
             let now = std::time::Instant::now();
-            score = self.search.negamax(
-                alpha,
-                beta,
-                i,
-                &mut self.board,
-                &mut self.mov_gen,
-                0
-            );
+
+            score = self
+                .search
+                .negamax(alpha, beta, i, &mut self.board, &mut self.mov_gen, 0);
+
+            if STOP.load(Ordering::Relaxed) {
+                break;
+            }
 
             if (score <= alpha) || (score >= beta) {
                 alpha = Negamax::MIN;
@@ -121,6 +123,17 @@ impl<'a> Kelp<'a> {
                 )
                 .as_str(),
             );
+
+            previous_best_move = self.search.get_pv_table(0, 0);
+        }
+
+        if STOP.load(Ordering::Relaxed) {
+            STOP.store(false, Ordering::Relaxed);
+            if self.search.best_move.is_some() {
+                return self.search.best_move;
+            } else {
+                return previous_best_move;
+            }
         }
 
         self.search.get_pv_table(0, 0)
@@ -138,14 +151,9 @@ impl<'a> Kelp<'a> {
         for i in 1..=depth {
             self.search.nodes = 0;
             let now = std::time::Instant::now();
-            score = self.search.negamax(
-                alpha,
-                beta,
-                i,
-                &mut self.board,
-                &mut self.mov_gen,
-                0
-            );
+            score = self
+                .search
+                .negamax(alpha, beta, i, &mut self.board, &mut self.mov_gen, 0);
 
             if (score <= alpha) || (score >= beta) {
                 alpha = Negamax::MIN;
@@ -155,7 +163,6 @@ impl<'a> Kelp<'a> {
 
             alpha = score - Self::ASPIRATION_WINDOW;
             beta = score + Self::ASPIRATION_WINDOW;
-
         }
 
         SearchMoveResult {
@@ -166,10 +173,26 @@ impl<'a> Kelp<'a> {
             time: std::time::Instant::now().elapsed(),
         }
     }
+
+    // custom uci handler
+    fn uci_handle(&mut self, rx: &mpsc::Receiver<String>) {
+        loop {
+            let mut input = rx.try_recv();
+            if input.is_err() {
+                continue;
+            }
+            let input = input.unwrap();
+
+            if !input.is_empty() {
+                self.receive(input.trim());
+            }
+        }
+    }
 }
 
 impl UCI for Kelp<'_> {
     fn handle_position(&mut self, arg: &[&str]) {
+        STOP.store(false, Ordering::Relaxed);
         if arg.len() < 1 {
             return;
         }
@@ -240,6 +263,7 @@ impl UCI for Kelp<'_> {
     }
 
     fn handle_stop(&self) {
+        println!("stop");
         STOP.store(true, Ordering::Relaxed);
     }
 
@@ -268,6 +292,33 @@ impl UCI for Kelp<'_> {
 
     fn print_board(&self) {
         self.send(format!("{}", self.board).as_str());
+    }
+
+    // Multi threaded UCI loop, takes input in a parallel thread
+    fn uci_loop(&mut self) {
+        let (tx, rx) = mpsc::channel();
+
+        // Start the input thread
+        let io_thread = thread::spawn(move || {
+            loop {
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input).unwrap();
+
+                if input.trim() == "stop" {
+                    STOP.store(true, Ordering::Relaxed);
+                    continue;
+                }
+                if input.trim() == "quit" {
+                    STOP.store(true, Ordering::Relaxed); //stop engine then pass quit to uci loop
+                }
+                tx.send(input).unwrap();
+            }
+        });
+
+        // Start the UCI loop in the main thread
+        self.uci_handle(&rx);
+
+        io_thread.join().unwrap();
     }
 
     fn log_stdio(&self, arg: &str) {

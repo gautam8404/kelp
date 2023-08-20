@@ -12,6 +12,13 @@ use strum_macros::{Display, EnumIter, EnumString, FromRepr};
 use board::moves::Castle;
 use board::piece::Color;
 use kelp_core::bitboard::BitBoard;
+use std::sync::atomic::AtomicBool;
+
+pub static STOP: AtomicBool = AtomicBool::new(false);
+// store best move if search was stopped using Move type
+pub static mut BEST_MOVE: Option<Move> = None;
+
+
 
 pub type BitBoardArray = [BitBoard; 12];
 
@@ -150,6 +157,7 @@ impl Sub<u8> for Squares {
 }
 
 use Squares::*;
+use crate::kelp::board::moves::Move;
 
 #[rustfmt::skip]
 const MIRROR: [Squares; 64] = [
@@ -162,3 +170,19 @@ const MIRROR: [Squares; 64] = [
     A2, B2, C2, D2, E2, F2, G2, H2,
     A1, B1, C1, D1, E1, F1, G1, H1,
 ];
+
+pub struct TimeControl {
+    pub time: u32,
+    pub increment: u32,
+    pub moves_to_go: u32,
+}
+
+impl TimeControl {
+    pub fn new(time: u32, increment: u32, moves_to_go: u32) -> Self {
+        TimeControl {
+            time,
+            increment,
+            moves_to_go,
+        }
+    }
+}

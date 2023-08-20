@@ -621,3 +621,47 @@ impl Debug for Board {
         write!(f, "{}", board)
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fen_to_board() {
+        let FEN = Fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ".to_string());
+        let ERR_FEN = Fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq a9 0 1 ".to_string()); // invalid en passant square
+
+        let board = Board::parse(FEN);
+        assert!(board.is_ok());
+        let board = Board::parse(ERR_FEN);
+        assert!(board.is_err());
+    }
+
+    #[test]
+    fn board_to_fen() {
+        use crate::kelp::kelp_core::bitboard::BitBoard;
+        let mut board = Board::default();
+        let test_fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1";
+
+        board.bitboards[0] = BitBoard(34628232960);
+        board.bitboards[1] = BitBoard(68719738880);
+        board.bitboards[2] = BitBoard(6144);
+        board.bitboards[3] = BitBoard(129);
+        board.bitboards[4] = BitBoard(2097152);
+        board.bitboards[5] = BitBoard(16);
+        board.bitboards[6] = BitBoard(12754334924144640);
+        board.bitboards[7] = BitBoard(37383395344384);
+        board.bitboards[8] = BitBoard(18015498021109760);
+        board.bitboards[9] = BitBoard(9295429630892703744);
+        board.bitboards[10] = BitBoard(4503599627370496);
+        board.bitboards[11] = BitBoard(1152921504606846976);
+
+        let fen = board.to_fen();
+        assert_eq!(fen, test_fen);
+
+        let fen = Fen::parse(&board);
+        assert!(fen.is_ok());
+        assert_eq!(fen.unwrap().to_string(), test_fen);
+    }
+}

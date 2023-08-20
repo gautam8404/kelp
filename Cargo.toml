@@ -5,11 +5,13 @@ members = [
     "kelp_perft"
 ]
 
+default-members = [
+    "kelp_engine",
+    "kelp_perft"
+]
 
 [profile.release]
 opt-level = 3
-debug = false
-rpath = false
 debug-assertions = false
 codegen-units = 1
 lto = true

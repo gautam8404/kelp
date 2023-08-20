@@ -1,7 +1,9 @@
 use crate::kelp::board::board::Board;
-use crate::kelp::board::moves::{Move};
+use crate::kelp::board::moves::Move;
 use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::search::eval::{eval, get_mvv_lva};
+use crate::kelp::{STOP};
+use std::sync::atomic::Ordering;
 
 pub struct Negamax {
     pub nodes: u64,
@@ -11,6 +13,7 @@ pub struct Negamax {
     pv_table: [[Option<Move>; Self::MAX_DEPTH]; Self::MAX_DEPTH],
     pub follow_pv: bool,
     pub score_pv: bool,
+    pub best_move: Option<Move>, // store best move if search was stopped using Move type
 }
 
 impl Default for Negamax {
@@ -24,6 +27,7 @@ impl Default for Negamax {
             pv_table: [[None; Self::MAX_DEPTH]; Self::MAX_DEPTH],
             follow_pv: false,
             score_pv: false,
+            best_move: None,
         }
     }
 }
@@ -63,6 +67,12 @@ impl Negamax {
         gen: &mut MovGen,
         ply: usize,
     ) -> i32 {
+        if self.nodes & 2047 == 0 && STOP.load(Ordering::Relaxed) {
+            if self.best_move.is_none() {
+                self.best_move = self.pv_table[0][0]; // only store best move if it is not already stored because tail recursion will overwrite it
+            }
+            return 0;
+        }
 
         self.pv_length[ply] = ply;
 
@@ -78,7 +88,7 @@ impl Negamax {
         let in_check = board.is_check(gen);
 
         //Null Move Pruning
-        if depth >=3 && in_check == false && ply != 0 {
+        if depth >= 3 && in_check == false && ply != 0 {
             let enpassant = board.make_null_move();
 
             let score = -self.negamax(-beta, -beta + 1, depth - 3, board, gen, ply + 1);
@@ -125,20 +135,15 @@ impl Negamax {
 
             if moves_searched == 0 {
                 score = -self.negamax(-beta, -alpha, depth - 1, board, gen, ply + 1);
-            } else { //Late Move Reduction
+            } else {
+                //Late Move Reduction
                 if moves_searched >= Self::FULL_DEPTH
                     && depth >= Self::NULL_MOVE_REDUCTION
                     && in_check == false
                     && moves.capture.is_none()
-                    && moves.is_promotion() == false {
-                    score = -self.negamax(
-                        -alpha - 1,
-                        -alpha,
-                        depth - 2,
-                        board,
-                        gen,
-                        ply + 1,
-                    );
+                    && moves.is_promotion() == false
+                {
+                    score = -self.negamax(-alpha - 1, -alpha, depth - 2, board, gen, ply + 1);
                 } else {
                     score = alpha + 1;
                 }
@@ -252,6 +257,7 @@ impl Negamax {
         self.pv_table = [[None; Self::MAX_DEPTH]; Self::MAX_DEPTH];
         self.follow_pv = false;
         self.score_pv = false;
+        self.best_move = None;
     }
 
     pub fn get_pv_str(&self) -> String {
