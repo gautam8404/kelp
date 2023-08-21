@@ -20,20 +20,7 @@ impl Not for Color {
     }
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    Eq,
-    PartialEq,
-    Hash,
-    Ord,
-    PartialOrd,
-    Display,
-    EnumIter,
-    EnumString,
-    FromRepr,
-)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd, Display, EnumIter, EnumString)]
 pub enum BoardPiece {
     #[strum(serialize = "P")]
     WhitePawn,

@@ -92,6 +92,5 @@ pub trait UCI {
         }
     }
 
-
     fn log_stdio(&self, arg: &str) {} // Optional function to log stdio
 }

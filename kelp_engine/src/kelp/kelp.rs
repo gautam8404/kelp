@@ -1,9 +1,11 @@
 use super::board::board::Board;
 use super::board::moves::Move;
+use super::board::piece::Color;
 use super::kelp_core::lookup_table::LookupTable;
 use super::mov_gen::generator::MovGen;
 use super::uci_trait::UCI;
-use super::{STOP};
+use super::TimeControl;
+use super::{stop_interval, STOP};
 use crate::kelp::board::fen::{Fen, FenParse};
 use crate::kelp::board::piece::BoardPiece::{self, *};
 use crate::kelp::search::negamax::Negamax;
@@ -84,8 +86,6 @@ impl<'a> Kelp<'a> {
         let mut alpha = Negamax::MIN;
         let mut beta = Negamax::MAX;
 
-        let mut previous_best_move = None;
-
         //Iterative Deepening
         for i in 1..=depth {
             self.search.nodes = 0;
@@ -97,6 +97,7 @@ impl<'a> Kelp<'a> {
                 .negamax(alpha, beta, i, &mut self.board, &mut self.mov_gen, 0);
 
             if STOP.load(Ordering::Relaxed) {
+                STOP.store(false, Ordering::Relaxed);
                 break;
             }
 
@@ -123,17 +124,6 @@ impl<'a> Kelp<'a> {
                 )
                 .as_str(),
             );
-
-            previous_best_move = self.search.get_pv_table(0, 0);
-        }
-
-        if STOP.load(Ordering::Relaxed) {
-            STOP.store(false, Ordering::Relaxed);
-            if self.search.best_move.is_some() {
-                return self.search.best_move;
-            } else {
-                return previous_best_move;
-            }
         }
 
         self.search.get_pv_table(0, 0)
@@ -230,27 +220,71 @@ impl UCI for Kelp<'_> {
     }
 
     fn handle_go(&mut self, arg: &[&str]) {
-        // TODO: replace this function with a better one
+        use std::time::Duration;
         let mut depth = 0;
 
-        // check for depth command
-        if arg.len() > 1 && arg[0] == "depth" {
-            depth = arg[1].parse::<usize>().unwrap();
-        } else {
-            depth = 4;
+        if arg.len() < 1 {
+            return;
         }
 
+        let mut time_control = TimeControl::default();
+
+        for i in 0..arg.len() {
+            if arg[i] == "wtime" {
+                time_control.wtime = Some(arg[i + 1].parse::<i128>().unwrap());
+            }
+
+            if arg[i] == "btime" {
+                time_control.btime = Some(arg[i + 1].parse::<i128>().unwrap());
+            }
+
+            if arg[i] == "winc" {
+                time_control.winc = arg[i + 1].parse::<i128>().unwrap();
+            }
+
+            if arg[i] == "binc" {
+                time_control.binc = arg[i + 1].parse::<i128>().unwrap();
+            }
+
+            if arg[i] == "movestogo" {
+                time_control.movestogo = Some(arg[i + 1].parse::<u32>().unwrap());
+            }
+
+            if arg[i] == "movetime" {
+                time_control.movetime = Some(arg[i + 1].parse::<i128>().unwrap());
+            }
+
+            if arg[i] == "infinite" {
+                time_control.infinite = true;
+            }
+
+            if arg[i] == "depth" {
+                depth = arg[i + 1].parse::<usize>().unwrap();
+            } else {
+                depth = Negamax::MAX_DEPTH;
+            }
+        }
+
+        let time_to_search = time_control.calculate_time(self.board.get_side_to_move());
+
+        if time_to_search.is_none() && !time_control.infinite {
+            return;
+        }
+
+        let time_to_search = time_to_search.unwrap_or(0);
+
+        let duration = Duration::from_millis(time_to_search as u64);
+
+        stop_interval(duration);
         let best_move = self.search_move(depth);
+        STOP.store(false, Ordering::Relaxed);
+
         if best_move.is_none() {
-            self.send("bestmove (none)");
+            self.send_bestmove("(none)");
         } else {
-            self.send(format!("bestmove {}", best_move.unwrap()).as_str());
+            self.send_bestmove(format!("{}", best_move.unwrap()).as_str());
         }
     }
-
-    // fn handle_go(&mut self, arg: &[&str]) {
-    //     todo!()
-    // }
 
     fn handle_uci(&self, arg: &[&str]) {
         self.send("id name Kelp Engine");
@@ -263,7 +297,6 @@ impl UCI for Kelp<'_> {
     }
 
     fn handle_stop(&self) {
-        println!("stop");
         STOP.store(true, Ordering::Relaxed);
     }
 

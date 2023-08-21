@@ -12,13 +12,17 @@ use strum_macros::{Display, EnumIter, EnumString, FromRepr};
 use board::moves::Castle;
 use board::piece::Color;
 use kelp_core::bitboard::BitBoard;
-use std::sync::atomic::AtomicBool;
-
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread;
+use std::time::Duration;
 pub static STOP: AtomicBool = AtomicBool::new(false);
-// store best move if search was stopped using Move type
-pub static mut BEST_MOVE: Option<Move> = None;
 
-
+pub fn stop_interval(duration: Duration) {
+    thread::spawn(move || {
+        thread::sleep(duration);
+        STOP.store(true, Ordering::Relaxed);
+    });
+}
 
 pub type BitBoardArray = [BitBoard; 12];
 
@@ -156,8 +160,9 @@ impl Sub<u8> for Squares {
     }
 }
 
-use Squares::*;
 use crate::kelp::board::moves::Move;
+use crate::kelp::GameState::Playing;
+use Squares::*;
 
 #[rustfmt::skip]
 const MIRROR: [Squares; 64] = [
@@ -171,18 +176,59 @@ const MIRROR: [Squares; 64] = [
     A1, B1, C1, D1, E1, F1, G1, H1,
 ];
 
+#[derive(Debug, Clone, Copy, Default)]
 pub struct TimeControl {
-    pub time: u32,
-    pub increment: u32,
-    pub moves_to_go: u32,
+    pub wtime: Option<i128>,
+    pub btime: Option<i128>,
+    pub winc: i128,
+    pub binc: i128,
+    pub movestogo: Option<u32>,
+    pub movetime: Option<i128>,
+    pub infinite: bool,
 }
 
 impl TimeControl {
-    pub fn new(time: u32, increment: u32, moves_to_go: u32) -> Self {
-        TimeControl {
-            time,
-            increment,
-            moves_to_go,
+    pub const MOVES_TO_GO: i128 = 30;
+    const SAFETY_MARGIN: i128 = 50;
+    const MAX_USAGE: f64 = 0.8;
+
+    fn calculate_time(&mut self, color: Color) -> Option<i128> {
+        if self.infinite {
+            return None;
         }
+
+        let mut time = match color {
+            Color::White => self.wtime,
+            Color::Black => self.btime,
+        };
+
+        let inc = match color {
+            Color::White => self.winc,
+            Color::Black => self.binc,
+        };
+
+        let mut moves_to_go = self.movestogo.unwrap_or(TimeControl::MOVES_TO_GO as u32) as i128;
+
+        if self.movetime.is_some() {
+            time = self.movetime;
+            moves_to_go = 1;
+        }
+
+        if time.is_some() {
+            let mut t_time = time.unwrap();
+            t_time /= moves_to_go;
+            t_time += inc;
+            t_time -= TimeControl::SAFETY_MARGIN;
+            t_time = t_time.max(0);
+            time = Some(t_time);
+        } else if inc > 0 {
+            time = Some(inc);
+        }
+
+        if time.unwrap_or(0) < 0 {
+            time = Some(0);
+        }
+
+        time
     }
 }
