@@ -2,7 +2,7 @@ use crate::kelp::board::board::Board;
 use crate::kelp::board::moves::Move;
 use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::search::eval::{eval, get_mvv_lva};
-use crate::kelp::{STOP};
+use crate::kelp::STOP;
 use std::sync::atomic::Ordering;
 
 pub struct Negamax {
@@ -13,7 +13,6 @@ pub struct Negamax {
     pv_table: [[Option<Move>; Self::MAX_DEPTH]; Self::MAX_DEPTH],
     pub follow_pv: bool,
     pub score_pv: bool,
-    pub best_move: Option<Move>, // store best move if search was stopped using Move type
 }
 
 impl Default for Negamax {
@@ -27,7 +26,6 @@ impl Default for Negamax {
             pv_table: [[None; Self::MAX_DEPTH]; Self::MAX_DEPTH],
             follow_pv: false,
             score_pv: false,
-            best_move: None,
         }
     }
 }
@@ -39,6 +37,7 @@ impl Negamax {
     pub const MATE_SCORE: i32 = -49000;
     const NULL_MOVE_REDUCTION: usize = 3;
     const FULL_DEPTH: usize = 4;
+    const NULL_WINDOW: usize = 2;
 
     #[inline(always)]
     fn score_move(&mut self, mov: &Move, ply: usize) -> i32 {
@@ -67,13 +66,6 @@ impl Negamax {
         gen: &mut MovGen,
         ply: usize,
     ) -> i32 {
-        if self.nodes & 2047 == 0 && STOP.load(Ordering::Relaxed) {
-            if self.best_move.is_none() {
-                self.best_move = self.pv_table[0][0]; // only store best move if it is not already stored because tail recursion will overwrite it
-            }
-            return 0;
-        }
-
         self.pv_length[ply] = ply;
 
         if depth == 0 {
@@ -91,9 +83,20 @@ impl Negamax {
         if depth >= 3 && in_check == false && ply != 0 {
             let enpassant = board.make_null_move();
 
-            let score = -self.negamax(-beta, -beta + 1, depth - 3, board, gen, ply + 1);
+            let score = -self.negamax(
+                -beta,
+                -beta + 1,
+                depth - 1 - Self::NULL_WINDOW,
+                board,
+                gen,
+                ply + 1,
+            );
 
             board.unmake_null_move(enpassant);
+
+            if STOP.load(Ordering::Relaxed) {
+                return 0;
+            }
 
             if score >= beta {
                 return beta;
@@ -159,6 +162,10 @@ impl Negamax {
             }
 
             board.unmake_move(a.unwrap());
+
+            if STOP.load(Ordering::Relaxed) {
+                return 0;
+            }
 
             moves_searched += 1;
 
@@ -257,7 +264,6 @@ impl Negamax {
         self.pv_table = [[None; Self::MAX_DEPTH]; Self::MAX_DEPTH];
         self.follow_pv = false;
         self.score_pv = false;
-        self.best_move = None;
     }
 
     pub fn get_pv_str(&self) -> String {

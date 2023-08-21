@@ -236,6 +236,7 @@ pub struct MoveHistory {
     pub mov: Move,
     pub castle_rights: Castle,
     pub en_passant: Option<Squares>,
+    pub hash: u64,
     pub half_move_clock: u8,
 }
 #[derive(Debug, Clone, Eq, PartialEq)]

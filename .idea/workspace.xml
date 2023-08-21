@@ -13,11 +13,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f2d4903a-89c8-4b37-ab92-16886ff7428e" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/board/zobrist.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kelp_engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/board/board.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/board/board.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/board/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/board/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/board/moves.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/board/moves.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/board/piece.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/board/piece.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/search/negamax.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/negamax.rs" afterDir="false" />
@@ -274,6 +275,8 @@
       <workItem from="1692266276268" duration="14392000" />
       <workItem from="1692299918891" duration="33426000" />
       <workItem from="1692528272718" duration="5900000" />
+      <workItem from="1692568626261" duration="4383000" />
+      <workItem from="1692616313636" duration="6330000" />
     </task>
     <servers />
   </component>

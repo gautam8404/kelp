@@ -10,6 +10,7 @@ use crate::kelp::board::piece::Color::*;
 use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::Squares::{self, *};
 use crate::kelp::{kelp_core::bitboard::BitBoard, BitBoardArray, BoardInfo, GamePhase, GameState};
+use super::zobrist::Zobrist;
 
 // strum
 use std::fmt::{format, Debug, Display};
@@ -26,6 +27,7 @@ pub struct Board {
     pub phase: GamePhase,
     pub info: BoardInfo,
     pub move_history: MoveArray,
+    pub zobrist: Zobrist, //TODO: make this private
 }
 
 impl Default for Board {
@@ -57,13 +59,13 @@ impl Board {
     #[inline(always)]
     pub fn add_piece(&mut self, piece: BoardPiece, square: Squares) {
         self.add_to_bb(piece, square);
-        // self.hash ^= crate::kelp::zobrist::get_piece_hash(piece, square); TODO
+        self.hash ^= self.zobrist.get_piece_key(piece, square);
     }
 
     #[inline(always)]
     pub fn remove_piece(&mut self, piece: BoardPiece, square: Squares) {
         self.remove_from_bb(piece, square);
-        // self.hash ^= crate::kelp::zobrist::get_piece_hash(piece, square); TODO
+        self.hash ^= self.zobrist.get_piece_key(piece, square);
     }
 
     #[inline(always)]
@@ -138,7 +140,19 @@ impl Board {
 
     #[inline(always)]
     pub fn set_en_passant(&mut self, square: Squares) {
+        if self.info.en_passant.is_some() {
+            self.hash ^= self.zobrist.get_en_passant_key(self.info.en_passant.unwrap());
+        }
         self.info.en_passant = Some(square);
+        self.hash ^= self.zobrist.get_en_passant_key(square);
+    }
+
+    #[inline(always)]
+    pub fn clear_en_passant(&mut self) {
+        if self.info.en_passant.is_some() {
+            self.hash ^= self.zobrist.get_en_passant_key(self.info.en_passant.unwrap());
+        }
+        self.info.en_passant = None;
     }
 
     pub fn to_fen(&self) -> String {
@@ -147,6 +161,11 @@ impl Board {
             return String::from("Error parsing fen");
         }
         fen.unwrap().to_string()
+    }
+
+    pub fn toggle_turn(&mut self) {
+        self.info.turn = !self.info.turn;
+        self.hash ^= self.zobrist.get_side_key();
     }
 
     #[inline(always)]
@@ -167,6 +186,11 @@ impl Board {
     #[inline(always)]
     pub fn get_bitboard(&self, piece: BoardPiece) -> BitBoard {
         self.bitboards[piece as usize]
+    }
+
+    #[inline(always)]
+    pub fn update_hash(&mut self) {
+        self.hash = self.zobrist.get_key(self);
     }
 }
 
@@ -309,10 +333,10 @@ impl Board {
         use Color::*;
         use MoveType::*;
 
-        let mut old_en_passant = self.info.en_passant;
-        let mut old_castle = self.info.castle;
-        let mut old_half_move_clock = self.info.halfmove_clock;
-        let mut old_full_move_number = self.info.fullmove_clock;
+        let old_en_passant = self.info.en_passant;
+        let old_castle = self.info.castle;
+        let old_half_move_clock = self.info.halfmove_clock;
+        let old_hash = self.hash;
 
         match mov.move_type {
             Normal => {
@@ -337,13 +361,14 @@ impl Board {
 
         // State Updates
 
-        // Update turn
-        self.info.turn = !self.info.turn;
-
         // Update fullmove number
-        if mov.piece.get_color() == Black {
+        if self.info.turn == Black {
             self.info.fullmove_clock += 1;
         }
+
+        // Update turn
+        self.toggle_turn();
+
 
         // Update halfmove clock
         if mov.capture.is_some() || mov.piece == WhitePawn || mov.piece == BlackPawn {
@@ -354,7 +379,7 @@ impl Board {
 
         // Update en passant
         if mov.move_type != DoublePawnPush {
-            self.info.en_passant = None;
+            self.clear_en_passant();
         }
 
         // Update castling rights
@@ -374,10 +399,15 @@ impl Board {
             self.info.castle.remove(BlackQueenSide);
         }
 
+        // Update Castle hash
+        self.hash ^= self.zobrist.get_castle_key(old_castle.0);
+        self.hash ^= self.zobrist.get_castle_key(self.info.castle.0);
+
         Some(MoveHistory {
             mov: mov,
             castle_rights: old_castle,
             en_passant: old_en_passant,
+            hash: old_hash,
             half_move_clock: old_half_move_clock,
         })
     }
@@ -410,6 +440,7 @@ impl Board {
         self.info.castle = history.castle_rights;
         self.info.en_passant = history.en_passant;
         self.info.halfmove_clock = history.half_move_clock;
+        self.hash = history.hash;
         if color == Black && self.info.fullmove_clock > 1 {
             self.info.fullmove_clock -= 1;
         }
@@ -537,7 +568,7 @@ impl FenParse<Fen, Board, FenParseError> for Board {
             }
         };
 
-        Ok(Board {
+        let mut board = Board {
             bitboards,
             hash: 0, // TODO
             state: game_state,
@@ -550,7 +581,12 @@ impl FenParse<Fen, Board, FenParseError> for Board {
                 halfmove_clock,
                 fullmove_clock,
             },
-        })
+            zobrist: Zobrist::new(),
+        };
+
+        board.update_hash();
+
+        Ok(board)
     }
 }
 
@@ -580,7 +616,7 @@ impl Display for Board {
         }
         board.push_str("  a   b   c   d   e   f   g   h\n\n");
         board.push_str(&format!("Fen: {}\n", self.to_fen()));
-        board.push_str(&format!("Key: {}\n", self.hash));
+        board.push_str(&format!("Key: {:016X}\n", self.hash));
         write!(f, "{}", board)
     }
 }
@@ -613,7 +649,7 @@ impl Debug for Board {
         board.push_str("  a   b   c   d   e   f   g   h\n\n");
         let fen = self.to_fen();
         board.push_str(format!("Fen: {}\n", fen).as_str());
-        board.push_str(format!("Hash: {}\n", self.hash).as_str());
+        board.push_str(format!("Hash: {:016X}\n", self.hash).as_str());
         board.push_str(format!("State: {:?}\n", self.state).as_str());
         board.push_str(format!("Phase: {:?}\n", self.phase).as_str());
         let board_info = format!("{:?}", self.info);
@@ -622,15 +658,18 @@ impl Debug for Board {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn fen_to_board() {
-        let FEN = Fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ".to_string());
-        let ERR_FEN = Fen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq a9 0 1 ".to_string()); // invalid en passant square
+        let FEN = Fen(
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ".to_string(),
+        );
+        let ERR_FEN = Fen(
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq a9 0 1 ".to_string(),
+        ); // invalid en passant square
 
         let board = Board::parse(FEN);
         assert!(board.is_ok());

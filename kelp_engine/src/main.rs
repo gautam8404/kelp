@@ -58,7 +58,7 @@ fn main() {
     let tricky = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ";
     let empty = "8/8/8/8/8/8/8/8 w KQ - 0 1";
 
-    let d_fen = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1";
+    let d_fen = "r3k2r/p1Ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ";
 
     // table.populate();
 
@@ -66,8 +66,46 @@ fn main() {
     // let a = kelp.parse_move("a2a4");
     // println!("{:?}", a);
 
-    let debug = false;
+    let debug = true;
     if debug {
+        let mut table = LookupTable::new();
+        let mut kelp = Kelp::new(&mut table);
+        kelp.handle_position(&["fen", tricky]);
+
+
+        let mut nodes = 0;
+        perft_test(4, &mut kelp.board, &mut kelp.mov_gen, &mut nodes);
+        println!("Nodes: {}", nodes);
+
+        // kelp.handle_position(&["fen", d_fen]); //38CC6D0BACBD4BD9
+        // println!("{:?}", kelp.board);
+        // let mv = kelp.parse_move("e1g1").unwrap();
+        // kelp.make_move(mv);
+        // println!("{:?}", kelp.board);
+        // let gen_hash = kelp.board.zobrist.get_key(&kelp.board);
+        //
+        // if kelp.board.hash != gen_hash {
+        //     println!("Hashes don't match: {:016X} {:016X}", kelp.board.hash, gen_hash);
+        // } else {
+        //     println!("\n\n\n\n\n\n\
+        //     ========================================================\n\
+        //     HURRAY! Hashes match: {:016X} {:016X}\n\
+        //     ========================================================\n\n\n\n\n\n", kelp.board.hash, gen_hash);
+
+        // kelp.board.info.toggle_turn();
+        // let mv2 = kelp.parse_move("g1h1").unwrap();
+        // kelp.make_move(mv2);
+
+        // println!("{:?}", kelp.board);
+        // kelp.unmake_move();
+        // println!("{:?}", kelp.board);
+        // kelp.unmake_move();
+        // println!("{:?}", kelp.board);
+        // use strum::IntoEnumIterator;
+        // for sq in Squares::iter() {
+        //     print!("{} ", sq);
+        //     println!("{}", sq as u8);
+        // }
         // kelp.handle_position(&["fen", starring_fen]);
         // let mut best_move: Option<Move> = None;
         // let score = search.negamax(-10000, 10000, 2, &mut kelp.board, &mut kelp.mov_gen, &mut best_move);
