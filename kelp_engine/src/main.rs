@@ -70,12 +70,12 @@ fn main() {
     if debug {
         let mut table = LookupTable::new();
         let mut kelp = Kelp::new(&mut table);
-        kelp.handle_position(&["fen", tricky]);
-
-
-        let mut nodes = 0;
-        perft_test(4, &mut kelp.board, &mut kelp.mov_gen, &mut nodes);
-        println!("Nodes: {}", nodes);
+        // kelp.handle_position(&["fen", "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1"]);
+        //
+        //
+        // let mut nodes = 0;
+        // perft_driver(1, &mut kelp.board, &mut kelp.mov_gen, &mut nodes);
+        // println!("Nodes: {}", nodes);
 
         // kelp.handle_position(&["fen", d_fen]); //38CC6D0BACBD4BD9
         // println!("{:?}", kelp.board);

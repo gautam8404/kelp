@@ -27,7 +27,7 @@ pub struct Board {
     pub phase: GamePhase,
     pub info: BoardInfo,
     pub move_history: MoveArray,
-    pub zobrist: Zobrist, //TODO: make this private
+    zobrist: Zobrist, //TODO: make this private
 }
 
 impl Default for Board {
@@ -191,6 +191,11 @@ impl Board {
     #[inline(always)]
     pub fn update_hash(&mut self) {
         self.hash = self.zobrist.get_key(self);
+    }
+
+    #[allow(dead_code)]
+    pub fn generated_hash(&self) -> u64 {
+        self.zobrist.get_key(self)
     }
 }
 
@@ -660,6 +665,7 @@ impl Debug for Board {
 
 #[cfg(test)]
 mod tests {
+    use crate::kelp::kelp_core::lookup_table::LookupTable;
     use super::*;
 
     #[test]
@@ -702,5 +708,42 @@ mod tests {
         let fen = Fen::parse(&board);
         assert!(fen.is_ok());
         assert_eq!(fen.unwrap().to_string(), test_fen);
+    }
+
+    fn incremental_zobrist_test_driver(depth:u16, board: &mut Board, gen: &mut MovGen) {
+        if depth == 0 {
+            return;
+        }
+        gen.generate_moves(board);
+        let move_list = gen.get_move_list();
+
+        for mov in move_list.iter() {
+            let history = board.make_move(*mov, false);
+            if history.is_none() {
+                continue;
+            }
+            let hash = board.generated_hash();
+            assert_eq!(hash, board.hash);
+            incremental_zobrist_test_driver(depth - 1, board, gen);
+            board.unmake_move(history.unwrap());
+            let hash = board.generated_hash();
+            assert_eq!(hash, board.hash);
+        }
+    }
+
+    #[test]
+    fn incremental_zobrist_test() {
+        let tricky_fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ".to_string();
+        let promotion_fen = "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ".to_string();
+
+        let mut table = LookupTable::new();
+        table.populate();
+        let mut gen = MovGen::new(&table);
+
+        let mut board = Board::parse(Fen(tricky_fen)).unwrap();
+        incremental_zobrist_test_driver(3, &mut board, &mut gen);
+
+        let mut board = Board::parse(Fen(promotion_fen)).unwrap();
+        incremental_zobrist_test_driver(3, &mut board, &mut gen);
     }
 }
