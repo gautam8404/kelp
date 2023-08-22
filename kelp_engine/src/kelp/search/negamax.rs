@@ -260,11 +260,7 @@ impl Negamax {
             depth: depth as u8,
             flag: entry_def.flag,
             score: alpha,
-            best_move: if entry_def.best_move.is_some() {
-                entry_def.best_move
-            } else {
-                self.pv_table[ply][ply]
-            },
+            best_move: self.pv_table[ply][ply],
         };
 
         self.tt.insert(board.hash, entry);
