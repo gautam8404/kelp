@@ -61,7 +61,8 @@ impl TranspositionTable {
 
     pub fn insert(&mut self, hash: u64, entry: Entry) {
         if self.table.len() >= self.size {
-            return;
+            let random_key = *self.table.keys().next().unwrap();
+            self.table.remove(&random_key); // idk if this is the best way to do this or if this will even work
         }
         self.table.insert(hash, entry);
     }
