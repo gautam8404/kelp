@@ -75,11 +75,11 @@ impl Negamax {
         let alpha_orig = alpha;
         let pv_node = (beta - alpha )> 1;
 
-        let mut entry = Entry::default();
-        entry.flag = EntryType::Alpha;
+        let mut entry_def = Entry::default();
+        entry_def.flag = EntryType::Alpha;
 
         if let Some(entry) = self.tt.get(board.hash) {
-            if entry.depth >= depth as u8 {
+            if entry.depth >= depth as u8 && entry.hash == board.hash{
                 match entry.flag {
                     EntryType::Exact => {
                         self.pv_table[ply][ply] = entry.best_move;
@@ -138,7 +138,7 @@ impl Negamax {
                     depth: depth as u8,
                     flag: EntryType::Beta,
                     score: beta,
-                    best_move: None,
+                    best_move: self.pv_table[ply][ply],
                 };
                 self.tt.insert(board.hash, ent);
                 return beta;
@@ -222,7 +222,7 @@ impl Negamax {
                     depth: depth as u8,
                     flag: EntryType::Beta,
                     score: beta,
-                    best_move: None,
+                    best_move: self.pv_table[ply][ply],
                 };
                 return beta;
             }
@@ -242,8 +242,8 @@ impl Negamax {
 
                 self.pv_length[ply] = self.pv_length[ply + 1];
 
-                entry.best_move = Some(*moves);
-                entry.flag = EntryType::Exact;
+                entry_def.best_move = Some(*moves);
+                entry_def.flag = EntryType::Exact;
             }
         }
 
@@ -258,9 +258,13 @@ impl Negamax {
         let entry = Entry {
             hash: board.hash,
             depth: depth as u8,
-            flag: entry.flag,
+            flag: entry_def.flag,
             score: alpha,
-            best_move: entry.best_move,
+            best_move: if entry_def.best_move.is_some() {
+                entry_def.best_move
+            } else {
+                self.pv_table[ply][ply]
+            },
         };
 
         self.tt.insert(board.hash, entry);
