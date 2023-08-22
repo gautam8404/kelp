@@ -160,8 +160,6 @@ impl Sub<u8> for Squares {
     }
 }
 
-use crate::kelp::board::moves::Move;
-use crate::kelp::GameState::Playing;
 use Squares::*;
 
 #[rustfmt::skip]

@@ -105,7 +105,7 @@ impl Display for BitBoard {
                 }
             }
             board.push_str(&format!("\t{} ", rank + 1));
-            board.push_str("\n");
+            board.push('\n');
         }
 
         board.push_str("\n\na  b  c  d  e  f  g  h\n");

@@ -1,6 +1,5 @@
 mod kelp;
 extern crate simplelog;
-#[macro_use]
 extern crate log;
 
 use crate::kelp::board::fen::FenParse;
@@ -37,7 +36,7 @@ fn ptest(gen: &mut MovGen) {
         .unwrap_or(&"4".to_string())
         .parse::<u16>()
         .unwrap();
-    let mut fen = args.get(2).unwrap_or(&starring_fen.to_string()).to_string();
+    let fen = args.get(2).unwrap_or(&starring_fen.to_string()).to_string();
 
     let mut board = Board::parse(Fen(fen)).unwrap();
     let mut nodes = 0;
@@ -62,14 +61,14 @@ fn main() {
 
     // table.populate();
 
-    let mut search = Negamax::default();
+    let search = Negamax::default();
     // let a = kelp.parse_move("a2a4");
     // println!("{:?}", a);
 
-    let debug = true;
+    let debug = false;
     if debug {
         let mut table = LookupTable::new();
-        let mut kelp = Kelp::new(&mut table);
+        let kelp = Kelp::new(&mut table);
         // kelp.handle_position(&["fen", "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1"]);
         //
         //

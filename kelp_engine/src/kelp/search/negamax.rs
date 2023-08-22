@@ -4,6 +4,7 @@ use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::search::eval::{eval, get_mvv_lva};
 use crate::kelp::STOP;
 use std::sync::atomic::Ordering;
+use super::transposition::{TranspositionTable, EntryType, Entry};
 
 pub struct Negamax {
     pub nodes: u64,
@@ -13,6 +14,7 @@ pub struct Negamax {
     pv_table: [[Option<Move>; Self::MAX_DEPTH]; Self::MAX_DEPTH],
     pub follow_pv: bool,
     pub score_pv: bool,
+    pub tt: TranspositionTable,
 }
 
 impl Default for Negamax {
@@ -26,6 +28,7 @@ impl Default for Negamax {
             pv_table: [[None; Self::MAX_DEPTH]; Self::MAX_DEPTH],
             follow_pv: false,
             score_pv: false,
+            tt: TranspositionTable::new(),
         }
     }
 }
@@ -56,6 +59,8 @@ impl Negamax {
             return self.history_moves[mov.piece as usize][mov.to as usize];
         }
     }
+
+
     #[inline(always)]
     pub fn negamax(
         &mut self,
@@ -67,6 +72,35 @@ impl Negamax {
         ply: usize,
     ) -> i32 {
         self.pv_length[ply] = ply;
+        let alpha_orig = alpha;
+        let pv_node = (beta - alpha )> 1;
+
+        let mut entry = Entry::default();
+        entry.flag = EntryType::Alpha;
+
+        if let Some(entry) = self.tt.get(board.hash) {
+            if entry.depth >= depth as u8 {
+                match entry.flag {
+                    EntryType::Exact => {
+                        self.pv_table[ply][ply] = entry.best_move;
+
+                        for i in (ply + 1)..self.pv_length[ply + 1] {
+                            self.pv_table[ply][i] = self.pv_table[ply + 1][i];
+                        }
+
+                        self.pv_length[ply] = self.pv_length[ply + 1];
+                        return entry.score;
+                    },
+                    EntryType::Alpha => if entry.score <= alpha {
+                        return alpha;
+                    },
+                    EntryType::Beta => if entry.score > beta {
+                        return beta;
+                    },
+                }
+
+            }
+        }
 
         if depth == 0 {
             return self.quiescence(alpha, beta, board, gen, ply + 1);
@@ -81,7 +115,7 @@ impl Negamax {
 
         //Null Move Pruning
         if depth >= 3 && in_check == false && ply != 0 {
-            let enpassant = board.make_null_move();
+            let (enpassant, old_hash) = board.make_null_move();
 
             let score = -self.negamax(
                 -beta,
@@ -92,13 +126,21 @@ impl Negamax {
                 ply + 1,
             );
 
-            board.unmake_null_move(enpassant);
+            board.unmake_null_move(enpassant, old_hash);
 
             if STOP.load(Ordering::Relaxed) {
                 return 0;
             }
 
             if score >= beta {
+                let ent = Entry {
+                    hash: board.hash,
+                    depth: depth as u8,
+                    flag: EntryType::Beta,
+                    score: beta,
+                    best_move: None,
+                };
+                self.tt.insert(board.hash, ent);
                 return beta;
             }
         }
@@ -174,6 +216,14 @@ impl Negamax {
                     self.killer_moves[1][ply] = self.killer_moves[0][ply];
                     self.killer_moves[0][ply] = Some(*moves);
                 }
+
+                let ent = Entry {
+                    hash: board.hash,
+                    depth: depth as u8,
+                    flag: EntryType::Beta,
+                    score: beta,
+                    best_move: None,
+                };
                 return beta;
             }
 
@@ -191,6 +241,9 @@ impl Negamax {
                 }
 
                 self.pv_length[ply] = self.pv_length[ply + 1];
+
+                entry.best_move = Some(*moves);
+                entry.flag = EntryType::Exact;
             }
         }
 
@@ -201,6 +254,16 @@ impl Negamax {
                 0
             };
         }
+
+        let entry = Entry {
+            hash: board.hash,
+            depth: depth as u8,
+            flag: entry.flag,
+            score: alpha,
+            best_move: entry.best_move,
+        };
+
+        self.tt.insert(board.hash, entry);
 
         alpha
     }

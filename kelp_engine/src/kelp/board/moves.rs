@@ -1,6 +1,5 @@
 use super::piece::{BoardPiece, Color};
 use crate::kelp::{Squares, MAX_SIZE_MOVES_ARR};
-use log;
 use std::fmt::{Debug, Display};
 use strum_macros::{Display, EnumIter, EnumString};
 

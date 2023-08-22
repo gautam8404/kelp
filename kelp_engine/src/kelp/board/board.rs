@@ -5,15 +5,15 @@ use super::piece::{
     BoardPiece::{self, *},
     Color,
 };
-use crate::kelp::board::moves::{GenType, Move, MoveArray, MoveHistory, MoveType};
+use super::zobrist::Zobrist;
+use crate::kelp::board::moves::{Move, MoveArray, MoveHistory, MoveType};
 use crate::kelp::board::piece::Color::*;
 use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::Squares::{self, *};
 use crate::kelp::{kelp_core::bitboard::BitBoard, BitBoardArray, BoardInfo, GamePhase, GameState};
-use super::zobrist::Zobrist;
 
 // strum
-use std::fmt::{format, Debug, Display};
+use std::fmt::{Debug, Display};
 use std::str::FromStr;
 use strum::IntoEnumIterator;
 
@@ -82,8 +82,8 @@ impl Board {
     #[inline(always)]
     pub fn get_king_square(&self, color: Color) -> Squares {
         let king = match color {
-            Color::White => WhiteKing,
-            Color::Black => BlackKing,
+            White => WhiteKing,
+            Black => BlackKing,
         };
 
         let sq = Squares::from_repr(self.bitboards[king as usize].get_lsb());
@@ -141,7 +141,9 @@ impl Board {
     #[inline(always)]
     pub fn set_en_passant(&mut self, square: Squares) {
         if self.info.en_passant.is_some() {
-            self.hash ^= self.zobrist.get_en_passant_key(self.info.en_passant.unwrap());
+            self.hash ^= self
+                .zobrist
+                .get_en_passant_key(self.info.en_passant.unwrap());
         }
         self.info.en_passant = Some(square);
         self.hash ^= self.zobrist.get_en_passant_key(square);
@@ -150,7 +152,9 @@ impl Board {
     #[inline(always)]
     pub fn clear_en_passant(&mut self) {
         if self.info.en_passant.is_some() {
-            self.hash ^= self.zobrist.get_en_passant_key(self.info.en_passant.unwrap());
+            self.hash ^= self
+                .zobrist
+                .get_en_passant_key(self.info.en_passant.unwrap());
         }
         self.info.en_passant = None;
     }
@@ -248,8 +252,8 @@ impl Board {
             CastlingRights::BlackQueenSide => (E8, C8, A8, D8),
         };
         let rook = match color {
-            Color::White => WhiteRook,
-            Color::Black => BlackRook,
+            White => WhiteRook,
+            Black => BlackRook,
         };
         self.move_piece(mov.piece, king_from, king_to);
         self.move_piece(rook, rook_from, rook_to);
@@ -298,8 +302,8 @@ impl Board {
             CastlingRights::BlackQueenSide => (E8, C8, A8, D8),
         };
         let rook = match color {
-            Color::White => WhiteRook,
-            Color::Black => BlackRook,
+            White => WhiteRook,
+            Black => BlackRook,
         };
         self.move_piece(mov.piece, king_to, king_from);
         self.move_piece(rook, rook_to, rook_from);
@@ -373,7 +377,6 @@ impl Board {
 
         // Update turn
         self.toggle_turn();
-
 
         // Update halfmove clock
         if mov.capture.is_some() || mov.piece == WhitePawn || mov.piece == BlackPawn {
@@ -451,17 +454,21 @@ impl Board {
         }
     }
 
-    pub fn make_null_move(&mut self) -> Option<Squares> {
+    pub fn make_null_move(&mut self) -> (Option<Squares>, u64) {
         let mut old_en_passant = self.info.en_passant;
-        self.info.en_passant = None;
-        self.info.turn = !self.info.turn;
+        let old_hash = self.hash;
+        self.clear_en_passant();
+        self.toggle_turn();
 
-        old_en_passant
+        (old_en_passant, old_hash)
     }
 
-    pub fn unmake_null_move(&mut self, en_passant: Option<Squares>) {
-        self.info.en_passant = en_passant;
-        self.info.turn = !self.info.turn;
+    pub fn unmake_null_move(&mut self, en_passant: Option<Squares>, hash: u64) {
+        if en_passant.is_some() {
+            self.set_en_passant(en_passant.unwrap());
+        }
+        self.toggle_turn();
+        self.hash = hash;
     }
 }
 
@@ -502,8 +509,8 @@ impl FenParse<Fen, Board, FenParseError> for Board {
         }
 
         let turn = match parts[1] {
-            "w" => Color::White,
-            "b" => Color::Black,
+            "w" => White,
+            "b" => Black,
             _ => {
                 return Err(FenParseError::InvalidTurn(format!(
                     "Invalid turn: {}, must be 'w' or 'b'",
@@ -665,8 +672,8 @@ impl Debug for Board {
 
 #[cfg(test)]
 mod tests {
-    use crate::kelp::kelp_core::lookup_table::LookupTable;
     use super::*;
+    use crate::kelp::kelp_core::lookup_table::LookupTable;
 
     #[test]
     fn fen_to_board() {
@@ -710,7 +717,7 @@ mod tests {
         assert_eq!(fen.unwrap().to_string(), test_fen);
     }
 
-    fn incremental_zobrist_test_driver(depth:u16, board: &mut Board, gen: &mut MovGen) {
+    fn incremental_zobrist_test_driver(depth: u16, board: &mut Board, gen: &mut MovGen) {
         if depth == 0 {
             return;
         }
@@ -733,8 +740,10 @@ mod tests {
 
     #[test]
     fn incremental_zobrist_test() {
-        let tricky_fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ".to_string();
-        let promotion_fen = "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ".to_string();
+        let tricky_fen =
+            "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ".to_string();
+        let promotion_fen =
+            "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 ".to_string();
 
         let mut table = LookupTable::new();
         table.populate();

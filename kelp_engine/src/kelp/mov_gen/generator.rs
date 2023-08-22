@@ -2,17 +2,15 @@ use crate::kelp::board::board::Board;
 use crate::kelp::board::moves::{CastlingRights, GenType};
 use crate::kelp::kelp_core::bitboard::BitBoard;
 use crate::kelp::kelp_core::lookup_table::LookupTable;
-use crate::kelp::Squares::{A7, E1, H7};
 use crate::kelp::{
     board::moves::{Move, MoveList, MoveType},
     board::piece::{
-        BoardPiece::{self, *},
+        BoardPiece::{*},
         Color::{self, *},
     },
-    Squares,
+    Squares::{self, *},
 };
 use log::info;
-use strum::IntoEnumIterator;
 
 pub struct MovGen<'a> {
     pub table: &'a LookupTable,
@@ -363,11 +361,11 @@ impl<'a> MovGen<'a> {
                 if castle.can_castle_king_side(White)
                     && !board.get_occ().get_bit(Squares::F1 as u8)
                     && !board.get_occ().get_bit(Squares::G1 as u8)
-                    && !self.is_attacked(Squares::E1, !side, board)
+                    && !self.is_attacked(E1, !side, board)
                     && !self.is_attacked(Squares::F1, !side, board)
                 {
                     self.move_list.push(Move::new(
-                        Squares::E1,
+                        E1,
                         Squares::G1,
                         WhiteKing,
                         None,
@@ -381,11 +379,11 @@ impl<'a> MovGen<'a> {
                     && !board.get_occ().get_bit(Squares::D1 as u8)
                     && !board.get_occ().get_bit(Squares::C1 as u8)
                     && !board.get_occ().get_bit(Squares::B1 as u8)
-                    && !self.is_attacked(Squares::E1, !side, board)
+                    && !self.is_attacked(E1, !side, board)
                     && !self.is_attacked(Squares::D1, !side, board)
                 {
                     self.move_list.push(Move::new(
-                        Squares::E1,
+                        E1,
                         Squares::C1,
                         WhiteKing,
                         None,

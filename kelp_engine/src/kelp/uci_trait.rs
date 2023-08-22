@@ -1,5 +1,3 @@
-use std::sync::mpsc;
-
 /// UCI trait, implements basic functions for UCI protocol, all handle_* functions are passed with array of args excluding the keyword
 pub trait UCI {
     fn handle_position(&mut self, arg: &[&str]);
@@ -92,5 +90,5 @@ pub trait UCI {
         }
     }
 
-    fn log_stdio(&self, arg: &str) {} // Optional function to log stdio
+    fn log_stdio(&self, _arg: &str) {} // Optional function to log stdio
 }

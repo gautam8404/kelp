@@ -1,13 +1,12 @@
 use super::board::board::Board;
 use super::board::moves::Move;
-use super::board::piece::Color;
 use super::kelp_core::lookup_table::LookupTable;
 use super::mov_gen::generator::MovGen;
 use super::uci_trait::UCI;
 use super::TimeControl;
 use super::{stop_interval, STOP};
 use crate::kelp::board::fen::{Fen, FenParse};
-use crate::kelp::board::piece::BoardPiece::{self, *};
+use crate::kelp::board::piece::BoardPiece::{*};
 use crate::kelp::search::negamax::Negamax;
 use log;
 use std::sync::atomic::Ordering;
@@ -114,18 +113,24 @@ impl<'a> Kelp<'a> {
 
             self.send_info(
                 format!(
-                    "depth {} score cp {} nodes {} time {} nps {} pv {}",
+                    "depth {} score cp {} nodes {} time {} nps {} hits {} misses {} hashfull {:.2} size {:.2} entries {} pv {}",
                     i,
                     score,
                     self.search.nodes,
                     elapsed.as_millis(),
                     (self.search.nodes as f64 / elapsed.as_secs_f64()) as u64,
+                    self.search.tt.get_hits(),
+                    self.search.tt.get_misses(),
+                    self.search.tt.get_hash_full_percentage() as u8,
+                    self.search.tt.get_hashmap_size_mb(),
+                    self.search.tt.get_total_entries(),
                     self.search.get_pv_str(),
                 )
                 .as_str(),
             );
         }
 
+        STOP.store(false, Ordering::Relaxed);
         self.search.get_pv_table(0, 0)
     }
 
@@ -140,7 +145,7 @@ impl<'a> Kelp<'a> {
 
         for i in 1..=depth {
             self.search.nodes = 0;
-            let now = std::time::Instant::now();
+            // let now = std::time::Instant::now();
             score = self
                 .search
                 .negamax(alpha, beta, i, &mut self.board, &mut self.mov_gen, 0);
@@ -217,11 +222,14 @@ impl UCI for Kelp<'_> {
                 point += 1;
             }
         }
+
+        self.search.tt.clear();
     }
 
     fn handle_go(&mut self, arg: &[&str]) {
         use std::time::Duration;
         let mut depth = 0;
+        STOP.store(false, Ordering::Relaxed); // a preventive measure
 
         if arg.len() < 1 {
             return;
@@ -231,19 +239,19 @@ impl UCI for Kelp<'_> {
 
         for i in 0..arg.len() {
             if arg[i] == "wtime" {
-                time_control.wtime = Some(arg[i + 1].parse::<i128>().unwrap());
+                time_control.wtime = Some(arg[i + 1].parse::<i128>().unwrap().abs());
             }
 
             if arg[i] == "btime" {
-                time_control.btime = Some(arg[i + 1].parse::<i128>().unwrap());
+                time_control.btime = Some(arg[i + 1].parse::<i128>().unwrap().abs());
             }
 
             if arg[i] == "winc" {
-                time_control.winc = arg[i + 1].parse::<i128>().unwrap();
+                time_control.winc = arg[i + 1].parse::<i128>().unwrap().abs();
             }
 
             if arg[i] == "binc" {
-                time_control.binc = arg[i + 1].parse::<i128>().unwrap();
+                time_control.binc = arg[i + 1].parse::<i128>().unwrap().abs();
             }
 
             if arg[i] == "movestogo" {
@@ -251,7 +259,7 @@ impl UCI for Kelp<'_> {
             }
 
             if arg[i] == "movetime" {
-                time_control.movetime = Some(arg[i + 1].parse::<i128>().unwrap());
+                time_control.movetime = Some(arg[i + 1].parse::<i128>().unwrap().abs());
             }
 
             if arg[i] == "infinite" {
@@ -259,28 +267,36 @@ impl UCI for Kelp<'_> {
             }
 
             if arg[i] == "depth" {
-                depth = arg[i + 1].parse::<usize>().unwrap();
-            } else {
-                depth = Negamax::MAX_DEPTH;
+                let dep = arg[i + 1].parse::<usize>();
+                if dep.is_ok() {
+                    depth = dep.unwrap();
+                } else {
+                    depth = Negamax::MAX_DEPTH;
+                }
             }
         }
 
         let time_to_search = time_control.calculate_time(self.board.get_side_to_move());
 
-        if time_to_search.is_none() && !time_control.infinite {
+        if time_to_search.is_none() && depth == 0 && !time_control.infinite {
             return;
         }
+        if time_to_search.is_some() || time_control.infinite {
+            depth = Negamax::MAX_DEPTH;
+        }
 
-        let time_to_search = time_to_search.unwrap_or(0);
 
-        let duration = Duration::from_millis(time_to_search as u64);
+        if time_to_search.is_some()  && !time_control.infinite && time_to_search.unwrap() >= 0 {
+            let time_to_search = time_to_search.unwrap_or(0);
+            let duration = Duration::from_millis(time_to_search as u64);
+            stop_interval(duration);
+        }
 
-        stop_interval(duration);
         let best_move = self.search_move(depth);
         STOP.store(false, Ordering::Relaxed);
 
         if best_move.is_none() {
-            self.send_bestmove("(none)");
+            STOP.store(false, Ordering::Relaxed);
         } else {
             self.send_bestmove(format!("{}", best_move.unwrap()).as_str());
         }

@@ -1,8 +1,8 @@
-use super::piece::{Color, BoardPiece};
-use rand_chacha::rand_core::{RngCore, SeedableRng};
-use strum::IntoEnumIterator;
+use super::piece::{BoardPiece, Color};
 use crate::kelp::board::board::Board;
 use crate::kelp::Squares;
+use rand_chacha::rand_core::{RngCore, SeedableRng};
+use strum::IntoEnumIterator;
 
 pub type ZobristKey = u64;
 
@@ -13,7 +13,6 @@ pub struct Zobrist {
     pub castle_keys: [ZobristKey; 16],
     pub en_passant_keys: [ZobristKey; 64],
 }
-
 
 impl Zobrist {
     pub fn new() -> Self {
