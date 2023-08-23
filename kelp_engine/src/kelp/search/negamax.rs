@@ -72,23 +72,18 @@ impl Negamax {
         ply: usize,
     ) -> i32 {
         self.pv_length[ply] = ply;
-        let alpha_orig = alpha;
-        let pv_node = (beta - alpha )> 1;
 
         let mut entry_def = Entry::default();
         entry_def.flag = EntryType::Alpha;
 
         if let Some(entry) = self.tt.get(board.hash) {
-            if entry.depth >= depth as u8 && entry.hash == board.hash{
+            if entry.depth >= depth as u8 && entry.hash == board.hash && ply != 0 {
+                self.pv_length[ply] = ply + 1;
+                self.pv_table[ply][ply] = entry.best_move;
+
                 match entry.flag {
                     EntryType::Exact => {
-                        self.pv_table[ply][ply] = entry.best_move;
 
-                        for i in (ply + 1)..self.pv_length[ply + 1] {
-                            self.pv_table[ply][i] = self.pv_table[ply + 1][i];
-                        }
-
-                        self.pv_length[ply] = self.pv_length[ply + 1];
                         return entry.score;
                     },
                     EntryType::Alpha => if entry.score <= alpha {
@@ -138,7 +133,7 @@ impl Negamax {
                     depth: depth as u8,
                     flag: EntryType::Beta,
                     score: beta,
-                    best_move: self.pv_table[ply][ply],
+                    best_move: None,
                 };
                 self.tt.insert(board.hash, ent);
                 return beta;
@@ -211,21 +206,6 @@ impl Negamax {
 
             moves_searched += 1;
 
-            if score >= beta {
-                if moves.capture.is_none() {
-                    self.killer_moves[1][ply] = self.killer_moves[0][ply];
-                    self.killer_moves[0][ply] = Some(*moves);
-                }
-
-                let ent = Entry {
-                    hash: board.hash,
-                    depth: depth as u8,
-                    flag: EntryType::Beta,
-                    score: beta,
-                    best_move: self.pv_table[ply][ply],
-                };
-                return beta;
-            }
 
             if score > alpha {
                 if moves.capture.is_none() {
@@ -244,6 +224,23 @@ impl Negamax {
 
                 entry_def.best_move = Some(*moves);
                 entry_def.flag = EntryType::Exact;
+
+                if score >= beta {
+                    if moves.capture.is_none() {
+                        self.killer_moves[1][ply] = self.killer_moves[0][ply];
+                        self.killer_moves[0][ply] = Some(*moves);
+                    }
+
+                    let ent = Entry {
+                        hash: board.hash,
+                        depth: depth as u8,
+                        flag: EntryType::Beta,
+                        score: beta,
+                        best_move: None,
+                    };
+                    self.tt.insert(board.hash, ent);
+                    return beta;
+                }
             }
         }
 
@@ -260,7 +257,7 @@ impl Negamax {
             depth: depth as u8,
             flag: entry_def.flag,
             score: alpha,
-            best_move: self.pv_table[ply][ply],
+            best_move: entry_def.best_move,
         };
 
         self.tt.insert(board.hash, entry);

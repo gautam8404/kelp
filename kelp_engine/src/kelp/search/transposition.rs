@@ -25,7 +25,7 @@ pub struct Entry {
 }
 #[derive(Debug, Default)]
 pub struct TranspositionTable {
-    pub table: HashMap<u64, Entry>,
+    table: HashMap<u64, Entry>,
     size: usize,
     hits: u64,
     misses: u64,
@@ -46,19 +46,21 @@ impl TranspositionTable {
         self.table.clear();
     }
 
+    #[inline(always)]
     pub fn get(&mut self, hash: u64) -> Option<&Entry> {
         let entry = self.table.get(&hash);
         if entry.is_some() {
-            self.hits += 1;
+            if entry.unwrap().hash == hash {
+                self.hits += 1;
+                return entry;
+            }
         } else {
             self.misses += 1;
-        }
-        if entry.is_some() && entry.unwrap().hash == hash {
-            return entry;
         }
         None
     }
 
+    #[inline(always)]
     pub fn insert(&mut self, hash: u64, entry: Entry) {
         if self.table.len() >= self.size {
             let random_key = *self.table.keys().next().unwrap();
@@ -78,6 +80,11 @@ impl TranspositionTable {
 
     pub fn get_misses(&self) -> u64 {
         self.misses
+    }
+
+    pub fn reset_hits_and_misses(&mut self) {
+        self.hits = 0;
+        self.misses = 0;
     }
 
     pub fn get_hashmap_size_mb(&self) -> f64 {

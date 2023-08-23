@@ -128,6 +128,7 @@ impl<'a> Kelp<'a> {
                 )
                 .as_str(),
             );
+            self.search.tt.reset_hits_and_misses();
         }
 
         STOP.store(false, Ordering::Relaxed);
