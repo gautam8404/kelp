@@ -1,6 +1,8 @@
 /// UCI trait, implements basic functions for UCI protocol, all handle_* functions are passed with array of args excluding the keyword
 pub trait UCI {
     fn handle_position(&mut self, arg: &[&str]);
+
+    fn handle_uci_newgame(&mut self);
     fn handle_go(&mut self, arg: &[&str]);
 
     fn handle_uci(&self, arg: &[&str]);
@@ -58,7 +60,7 @@ pub trait UCI {
             "quit" => self.handle_quit(),
             "stop" => self.handle_stop(),
             "isready" => self.handle_ready(),
-            "ucinewgame" => self.handle_position(["startpos"].as_ref()),
+            "ucinewgame" => self.handle_uci_newgame(),
             "d" => self.print_board(),
             _ => self.handle_unknown(command, &args),
         }

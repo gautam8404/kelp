@@ -224,6 +224,11 @@ impl UCI for Kelp<'_> {
             }
         }
 
+        self.search.tt.clear(); // removing this for concurrency
+    }
+
+    fn handle_uci_newgame(&mut self) {
+        self.board = Board::default();
         self.search.tt.clear();
     }
 

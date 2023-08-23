@@ -14,6 +14,10 @@
   <component name="ChangeListManager">
     <list default="true" id="f2d4903a-89c8-4b37-ab92-16886ff7428e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/search/negamax.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/negamax.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/search/transposition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/transposition.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/uci_trait.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/uci_trait.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,7 +86,7 @@
     <option name="runOnTheFly" value="true" />
     <option name="tool" value="Clippy" />
   </component>
-  <component name="RunManager" selected="Cargo.test">
+  <component name="RunManager" selected="Cargo.Run (engine)">
     <configuration name="Build Dev (engine)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="build --bin kelp_engine --package kelp_engine" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />

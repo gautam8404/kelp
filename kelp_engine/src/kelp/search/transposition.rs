@@ -33,6 +33,7 @@ pub struct TranspositionTable {
 
 impl TranspositionTable {
     pub fn new() -> Self {
+        log::info!("Initializing transposition table");
         let num_entries = SIZE_BYTES / std::mem::size_of::<Entry>();
         TranspositionTable {
             table: HashMap::with_capacity(num_entries),

@@ -37,7 +37,9 @@ impl Negamax {
     pub const MIN: i32 = -50000;
     pub const MAX: i32 = 50000;
     pub const MAX_DEPTH: usize = 64;
-    pub const MATE_SCORE: i32 = -49000;
+    pub const MATE_VALUE: i32 = -49000;
+    pub const MATE_SCORE: i32 = 48000;
+
     const NULL_MOVE_REDUCTION: usize = 3;
     const FULL_DEPTH: usize = 4;
     const NULL_WINDOW: usize = 2;
@@ -78,18 +80,23 @@ impl Negamax {
 
         if let Some(entry) = self.tt.get(board.hash) {
             if entry.depth >= depth as u8 && entry.hash == board.hash && ply != 0 {
-                self.pv_length[ply] = ply + 1;
-                self.pv_table[ply][ply] = entry.best_move;
 
                 match entry.flag {
                     EntryType::Exact => {
+                        self.pv_length[ply] = ply + 1;
+                        self.pv_table[ply][ply] = entry.best_move;
 
+                        if entry.score < -Self::MATE_SCORE {
+                            return entry.score + ply as i32;
+                        } else if entry.score > Self::MATE_SCORE {
+                            return entry.score - ply as i32;
+                        }
                         return entry.score;
                     },
                     EntryType::Alpha => if entry.score <= alpha {
                         return alpha;
                     },
-                    EntryType::Beta => if entry.score > beta {
+                    EntryType::Beta => if entry.score >= beta {
                         return beta;
                     },
                 }
@@ -246,17 +253,31 @@ impl Negamax {
 
         if legal_moves == 0 {
             return if in_check {
-                Self::MATE_SCORE + ply as i32
+                Self::MATE_VALUE + ply as i32
             } else {
                 0
             };
         }
 
+        let sc = {
+            if entry_def.flag == EntryType::Exact {
+                if alpha > Self::MATE_SCORE {
+                    alpha + ply as i32
+                } else if alpha < -Self::MATE_SCORE {
+                    alpha - ply as i32
+                } else {
+                    alpha
+                }
+            } else {
+                alpha
+            }
+        };
+
         let entry = Entry {
             hash: board.hash,
             depth: depth as u8,
             flag: entry_def.flag,
-            score: alpha,
+            score: sc,
             best_move: entry_def.best_move,
         };
 
