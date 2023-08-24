@@ -5,7 +5,7 @@ pub mod mov_gen;
 pub mod search;
 pub mod uci_trait;
 
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::ops::{Add, Sub};
 use strum_macros::{Display, EnumIter, EnumString, FromRepr};
 
@@ -161,6 +161,7 @@ impl Sub<u8> for Squares {
 }
 
 use Squares::*;
+use crate::kelp::board::moves::Move;
 
 #[rustfmt::skip]
 const MIRROR: [Squares; 64] = [
@@ -229,4 +230,75 @@ impl TimeControl {
 
         time
     }
+}
+
+pub struct SearchMoveResult {
+    pub best_move: Option<Move>,
+    pub score: i32,
+    pub depth: usize,
+    pub nodes: u64,
+    pub time: Duration,
+    pub nps: u64,
+    pub pv: String,
+    pub mate_in: Option<i32>,
+}
+impl Display for SearchMoveResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut info = String::new();
+
+        info.push_str(format!("depth {} ", self.depth).as_str());
+        info.push_str(format!("score cp {} ", self.score).as_str());
+        info.push_str(format!("nodes {} ", self.nodes).as_str());
+        info.push_str(format!("time {} ", self.time.as_millis()).as_str());
+        info.push_str(format!("nps {} ", self.nps).as_str());
+
+        if self.mate_in.is_some() {
+            info.push_str(format!("mate {} ", self.mate_in.unwrap()).as_str());
+        }
+
+        info.push_str(format!("pv {}", self.pv).as_str());
+
+        write!(f, "{}", info)
+    }
+}
+
+
+pub struct SearchMoveResultExtended {
+    pub best_move: Option<Move>,
+    pub score: i32,
+    pub depth: usize,
+    pub nodes: u64,
+    pub time: Duration,
+    pub nps: u64,
+    pub pv: String,
+    pub mate_in: Option<i32>,
+    pub hash_full: usize,
+    pub tb_hits: usize,
+    pub misses: usize,
+    pub size: f64,
+}
+
+impl Display for SearchMoveResultExtended {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut info = String::new();
+
+        info.push_str(format!("depth {} ", self.depth).as_str());
+        info.push_str(format!("score cp {} ", self.score).as_str());
+        info.push_str(format!("nodes {} ", self.nodes).as_str());
+        info.push_str(format!("time {} ", self.time.as_millis()).as_str());
+        info.push_str(format!("nps {} ", self.nps).as_str());
+
+        if self.mate_in.is_some() {
+            info.push_str(format!("mate {} ", self.mate_in.unwrap()).as_str());
+        }
+
+        info.push_str(format!("hashfull {} ", self.hash_full).as_str());
+        info.push_str(format!("tbhits {} ", self.tb_hits).as_str());
+        info.push_str(format!("misses {} ", self.misses).as_str());
+        info.push_str(format!("size {:.2} ", self.size).as_str());
+        info.push_str(format!("pv {}", self.pv).as_str());
+
+        write!(f, "{}", info)
+    }
+
 }

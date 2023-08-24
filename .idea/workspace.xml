@@ -14,7 +14,13 @@
   <component name="ChangeListManager">
     <list default="true" id="f2d4903a-89c8-4b37-ab92-16886ff7428e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/search/eval.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/eval.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/search/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/search/negamax.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/negamax.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/search/transposition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/transposition.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -168,7 +174,7 @@
       <method v="2" />
     </configuration>
     <configuration name="Run (engine)" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-      <option name="command" value="run  --bin kelp_engine --package kelp_engine" />
+      <option name="command" value="run  --bin kelp --package kelp_engine" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="emulateTerminal" value="true" />
       <option name="channel" value="DEFAULT" />
@@ -336,7 +342,7 @@
       <workItem from="1692638438063" duration="17880000" />
       <workItem from="1692694811175" duration="8251000" />
       <workItem from="1692703069332" duration="334000" />
-      <workItem from="1692866513367" duration="799000" />
+      <workItem from="1692866513367" duration="7861000" />
     </task>
     <servers />
   </component>
@@ -348,6 +354,17 @@
     <isAutomaticCheckingOnLaunch value="false" />
     <isAutomaticFoundErrors value="true" />
     <isAutomaticFoundErrors value="true" />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+        <option value="Space.CommitStatus" />
+      </list>
+    </option>
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">

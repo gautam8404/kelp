@@ -37,7 +37,7 @@ impl Negamax {
     pub const MIN: i32 = -50000;
     pub const MAX: i32 = 50000;
     pub const MAX_DEPTH: usize = 64;
-    pub const MATE_VALUE: i32 = -49000;
+    pub const MATE_VALUE: i32 = 49000;
     pub const MATE_SCORE: i32 = 48000;
 
     const NULL_MOVE_REDUCTION: usize = 3;
@@ -82,8 +82,10 @@ impl Negamax {
         let mut entry_def = Entry::default();
         entry_def.flag = EntryType::Alpha;
 
+        let pv_node = beta - alpha > 1;
+
         if let Some(entry) = self.tt.get(board.hash) {
-            if entry.depth >= depth as u8 && entry.hash == board.hash && ply != 0 {
+            if entry.depth >= depth as u8 && entry.hash == board.hash && ply != 0  && !pv_node {
 
                 match entry.flag {
                     EntryType::Exact => {
@@ -257,7 +259,7 @@ impl Negamax {
 
         if legal_moves == 0 {
             return if in_check {
-                Self::MATE_VALUE + ply as i32
+                -Self::MATE_VALUE + ply as i32
             } else {
                 0
             };

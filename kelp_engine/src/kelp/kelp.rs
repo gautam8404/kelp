@@ -3,7 +3,7 @@ use super::board::moves::Move;
 use super::kelp_core::lookup_table::LookupTable;
 use super::mov_gen::generator::MovGen;
 use super::uci_trait::UCI;
-use super::TimeControl;
+use super::{TimeControl, SearchMoveResult, SearchMoveResultExtended};
 use super::{stop_interval, STOP};
 use crate::kelp::board::fen::{Fen, FenParse};
 use crate::kelp::board::piece::BoardPiece::{*};
@@ -12,14 +12,6 @@ use log;
 use std::sync::atomic::Ordering;
 use std::sync::mpsc;
 use std::thread;
-
-pub struct SearchMoveResult {
-    pub best_move: Option<Move>,
-    pub score: i32,
-    pub depth: usize,
-    pub nodes: u64,
-    pub time: std::time::Duration,
-}
 
 /// Main Implementation for all UCI commands also acts as a library for the engine
 /// Kelp contains the board and the mov_gen from kelp::board and kelp::mov_gen respectively
@@ -111,23 +103,30 @@ impl<'a> Kelp<'a> {
 
             let elapsed = now.elapsed();
 
-            self.send_info(
-                format!(
-                    "depth {} score cp {} nodes {} time {} nps {} hits {} misses {} hashfull {:.2} size {:.2} entries {} pv {}",
-                    i,
-                    score,
-                    self.search.nodes,
-                    elapsed.as_millis(),
-                    (self.search.nodes as f64 / elapsed.as_secs_f64()) as u64,
-                    self.search.tt.get_hits(),
-                    self.search.tt.get_misses(),
-                    self.search.tt.get_hash_full_percentage() as u8,
-                    self.search.tt.get_hashmap_size_mb(),
-                    self.search.tt.get_total_entries(),
-                    self.search.get_pv_str(),
-                )
-                .as_str(),
-            );
+            let mut mate_in: Option<i32> = None;
+
+            if score > -Negamax::MATE_VALUE && score < -Negamax::MATE_SCORE {
+                mate_in = Some(-(score + Negamax::MATE_VALUE)/2 - 1);
+            } else if score > Negamax::MATE_SCORE && score < Negamax::MATE_VALUE {
+                mate_in = Some((Negamax::MATE_VALUE - score)/2 + 1);
+            }
+
+            let res = SearchMoveResultExtended {
+                best_move: self.search.get_pv_table(0, 0),
+                score,
+                depth: i,
+                nodes: self.search.nodes,
+                time: elapsed,
+                nps: (self.search.nodes as f64 / elapsed.as_secs_f64()) as u64,
+                pv: self.search.get_pv_str(),
+                mate_in,
+                hash_full: self.search.tt.get_hash_full_percentage() as usize,
+                tb_hits: self.search.tt.get_hits() as usize,
+                misses: self.search.tt.get_misses() as usize,
+                size: self.search.tt.get_hashmap_size_mb(),
+            };
+
+            self.send_info(format!("{}", res).as_str());
             self.search.tt.reset_hits_and_misses();
         }
 
@@ -143,6 +142,8 @@ impl<'a> Kelp<'a> {
 
         let mut alpha = Negamax::MIN;
         let mut beta = Negamax::MAX;
+
+        let now = std::time::Instant::now();
 
         for i in 1..=depth {
             self.search.nodes = 0;
@@ -161,12 +162,24 @@ impl<'a> Kelp<'a> {
             beta = score + Self::ASPIRATION_WINDOW;
         }
 
+        let mut mate_in: Option<i32> = None;
+
+
+        if score > -Negamax::MATE_VALUE && score < -Negamax::MATE_SCORE {
+            mate_in = Some(-(score + Negamax::MATE_VALUE)/2 - 1);
+        } else if score > Negamax::MATE_SCORE && score < Negamax::MATE_VALUE {
+            mate_in = Some((Negamax::MATE_VALUE - score)/2 + 1);
+        }
+
         SearchMoveResult {
             best_move: self.search.get_pv_table(0, 0),
             score,
             depth,
             nodes: self.search.nodes,
-            time: std::time::Instant::now().elapsed(),
+            time: now.elapsed(),
+            nps: (self.search.nodes as f64 / now.elapsed().as_secs_f64()) as u64,
+            pv: self.search.get_pv_str(),
+            mate_in,
         }
     }
 
@@ -309,8 +322,16 @@ impl UCI for Kelp<'_> {
     }
 
     fn handle_uci(&self, arg: &[&str]) {
-        self.send("id name Kelp Engine");
-        self.send("id author Gautam Dhingra");
+        let mut name = env!("CARGO_PKG_NAME").to_string();
+        name = name.split("_").collect::<Vec<&str>>()[0].to_string();
+        //capitalize first letter
+        name = name.chars().enumerate().map(|(i, c)| if i == 0 { c.to_ascii_uppercase() } else { c }).collect(); //OOF
+        name = format!("{} {}", name, env!("CARGO_PKG_VERSION"));
+
+        let author = env!("CARGO_PKG_AUTHORS").to_string().split_whitespace().collect::<Vec<&str>>()[0].to_string();
+
+        self.send(format!("id name {}", name).as_str());
+        self.send(format!("id author {}", author).as_str());
         self.send("uciok");
     }
 
@@ -332,7 +353,10 @@ impl UCI for Kelp<'_> {
                 self.send("Kelp is a UCI compatible chess engine written in Rust");
                 self.send("It is released as a free software under GNU GPL v3 License.");
                 self.send("For more information visit https://github.com/gautam8404/kelp/#readme");
-            }
+            },
+            "version" | "v" => {
+                self.send(env!("CARGO_PKG_VERSION"));
+            },
             _ => {
                 self.send(
                     format!(
