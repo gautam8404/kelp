@@ -51,6 +51,10 @@ impl Negamax {
             return 20000;
         }
 
+        if mov.is_promotion() {
+            return get_mvv_lva(mov) + 10010;
+        }
+
         if mov.capture.is_some() {
             get_mvv_lva(mov) + 10000
         } else if self.killer_moves[0][ply] == Some(*mov) {

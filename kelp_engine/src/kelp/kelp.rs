@@ -224,7 +224,7 @@ impl UCI for Kelp<'_> {
             }
         }
 
-        self.search.tt.clear(); // removing this for concurrency
+        self.search.tt.clear();
     }
 
     fn handle_uci_newgame(&mut self) {
