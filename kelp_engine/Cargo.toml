@@ -1,6 +1,6 @@
 [package]
 name = "kelp_engine"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["GautamDhingra <gautamdhingra8404@gmail.com>"]
 edition = "2021"
 
