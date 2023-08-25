@@ -11,7 +11,6 @@ use crate::kelp::board::piece::Color::*;
 use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::Squares::{self, *};
 use crate::kelp::{kelp_core::bitboard::BitBoard, BitBoardArray, BoardInfo, GamePhase, GameState};
-use std::collections::{HashMap, HashSet};
 
 // strum
 use std::fmt::{Debug, Display};
