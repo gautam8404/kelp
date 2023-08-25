@@ -14,7 +14,6 @@
   <component name="ChangeListManager">
     <list default="true" id="f2d4903a-89c8-4b37-ab92-16886ff7428e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.github/workflows/rust-ci.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/rust-ci.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -337,7 +336,7 @@
       <workItem from="1692694811175" duration="8251000" />
       <workItem from="1692703069332" duration="334000" />
       <workItem from="1692866513367" duration="18581000" />
-      <workItem from="1692954482921" duration="12384000" />
+      <workItem from="1692954482921" duration="12479000" />
     </task>
     <servers />
   </component>

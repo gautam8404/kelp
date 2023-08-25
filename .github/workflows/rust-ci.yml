@@ -67,6 +67,7 @@ jobs:
             tar czvf ../../release/${{ matrix.platform.name }} ${{ matrix.platform.bin }}
           fi
           cd -
+
       - name: Generate sha256sum
         shell: bash
         run: |
