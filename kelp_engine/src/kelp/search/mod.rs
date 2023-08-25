@@ -1,6 +1,7 @@
 pub mod eval;
 pub mod negamax;
 mod transposition;
+mod draw_table;
 
 pub const MATERIAL_SCORE: [i32; 12] = [
     100, 300, 320, 500, 900, 10000, -100, -300, -320, -500, -900, -10000,

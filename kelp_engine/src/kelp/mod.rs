@@ -25,6 +25,7 @@ pub fn stop_interval(duration: Duration) {
 }
 
 pub type BitBoardArray = [BitBoard; 12];
+pub type ZobristKey = u64;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum GamePhase {

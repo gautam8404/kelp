@@ -3,8 +3,7 @@ use crate::kelp::board::board::Board;
 use crate::kelp::Squares;
 use rand_chacha::rand_core::{RngCore, SeedableRng};
 use strum::IntoEnumIterator;
-
-pub type ZobristKey = u64;
+use crate::kelp::ZobristKey;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Zobrist {

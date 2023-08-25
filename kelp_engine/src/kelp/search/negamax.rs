@@ -5,6 +5,7 @@ use crate::kelp::search::eval::{eval, get_mvv_lva};
 use crate::kelp::STOP;
 use std::sync::atomic::Ordering;
 use super::transposition::{TranspositionTable, EntryType, Entry};
+use super::draw_table::DrawTable;
 
 pub struct Negamax {
     pub nodes: u64,
@@ -12,6 +13,7 @@ pub struct Negamax {
     history_moves: [[i32; 64]; 12],
     pv_length: [usize; Self::MAX_DEPTH],
     pv_table: [[Option<Move>; Self::MAX_DEPTH]; Self::MAX_DEPTH],
+    draw_table: DrawTable,
     pub follow_pv: bool,
     pub score_pv: bool,
     pub tt: TranspositionTable,
@@ -26,6 +28,7 @@ impl Default for Negamax {
             history_moves: [[0; 64]; 12],
             pv_length: [0; Self::MAX_DEPTH],
             pv_table: [[None; Self::MAX_DEPTH]; Self::MAX_DEPTH],
+            draw_table: DrawTable::new(),
             follow_pv: false,
             score_pv: false,
             tt: TranspositionTable::new(),
@@ -82,7 +85,7 @@ impl Negamax {
         let mut entry_def = Entry::default();
         entry_def.flag = EntryType::Alpha;
 
-        if ply != 0 && board.is_repetition() {
+        if ply != 0 && self.draw_table.is_repeat(board.hash) {
             return 0;
         }
 
@@ -127,6 +130,7 @@ impl Negamax {
 
         //Null Move Pruning
         if depth >= 3 && in_check == false && ply != 0 {
+            self.draw_table.push(board.hash);
             let (enpassant, old_hash) = board.make_null_move();
 
             let score = -self.negamax(
@@ -138,6 +142,7 @@ impl Negamax {
                 ply + 1,
             );
 
+            self.draw_table.pop();
             board.unmake_null_move(enpassant, old_hash);
 
             if STOP.load(Ordering::Relaxed) {
@@ -178,20 +183,22 @@ impl Negamax {
         let mut moves_searched = 0;
 
         for moves in moves_list.iter() {
-            board.add_repetition();
+            self.draw_table.push(board.hash);
+
             let a = board.make_move(*moves, false);
             if a.is_none() {
-                board.remove_repetition();
+                self.draw_table.pop();
                 continue;
             }
 
             if board.is_check_opp(gen) {
                 board.unmake_move(a.unwrap());
-                board.remove_repetition();
+                self.draw_table.pop();
                 continue;
             }
 
             legal_moves += 1;
+            // self.draw_table.push(board.hash);
 
             if moves_searched == 0 {
                 score = -self.negamax(-beta, -alpha, depth - 1, board, gen, ply + 1);
@@ -218,7 +225,7 @@ impl Negamax {
                 }
             }
 
-            board.remove_repetition();
+            self.draw_table.pop();
             board.unmake_move(a.unwrap());
 
             if STOP.load(Ordering::Relaxed) {
@@ -327,22 +334,21 @@ impl Negamax {
         });
 
         for m in moves_list.iter() {
-            board.add_repetition();
-
+            self.draw_table.push(board.hash);
             let a = board.make_move(*m, true);
             if a.is_none() {
-                board.remove_repetition();
+                self.draw_table.pop();
                 continue;
             }
             if board.is_check_opp(gen) {
                 board.unmake_move(a.unwrap());
-                board.remove_repetition();
+                self.draw_table.pop();
                 continue;
             }
 
             let score = -self.quiescence(-beta, -alpha, board, gen, ply + 1);
 
-            board.remove_repetition();
+            self.draw_table.pop();
             board.unmake_move(a.unwrap());
 
             if score >= beta {
@@ -356,7 +362,19 @@ impl Negamax {
         alpha
     }
 
-    pub fn reset(&mut self) {
+    pub fn add_draw(&mut self, key: u64) {
+        self.draw_table.push(key);
+    }
+
+    pub fn clear_draw(&mut self) {
+        self.draw_table.clear();
+    }
+
+    pub fn clear_tt(&mut self) {
+        self.tt.clear();
+    }
+
+    pub fn reset(&mut self) { // for iterative deepening
         self.nodes = 0;
         self.killer_moves = [[None; Self::MAX_DEPTH]; 2];
         self.history_moves = [[0; 64]; 12];
@@ -364,6 +382,11 @@ impl Negamax {
         self.pv_table = [[None; Self::MAX_DEPTH]; Self::MAX_DEPTH];
         self.follow_pv = false;
         self.score_pv = false;
+    }
+
+    pub fn reset_tables(&mut self) { //for position command and new game
+        self.tt.clear();
+        self.draw_table.clear();
     }
 
     pub fn get_pv_str(&self) -> String {

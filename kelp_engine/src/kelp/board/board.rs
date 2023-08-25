@@ -20,7 +20,7 @@ use strum::IntoEnumIterator;
 
 const STARTPOS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-#[derive(Clone, Eq, PartialEq)] // TODO: Not sure whether to add Copy trait yet
+#[derive(Clone, Eq, PartialEq)] 
 pub struct Board {
     pub bitboards: BitBoardArray,
     pub hash: u64,
@@ -28,8 +28,7 @@ pub struct Board {
     pub phase: GamePhase,
     pub info: BoardInfo,
     pub move_history: MoveArray,
-    draw_table: Vec<u64>,
-    zobrist: Zobrist, //TODO: make this private
+    zobrist: Zobrist, 
 }
 
 impl Default for Board {
@@ -202,10 +201,6 @@ impl Board {
     #[allow(dead_code)]
     pub fn generated_hash(&self) -> u64 {
         self.zobrist.get_key(self)
-    }
-
-    pub fn clear_draw_table(&mut self) {
-        self.draw_table.clear();
     }
 }
 
@@ -464,21 +459,6 @@ impl Board {
     }
 
     #[inline(always)]
-    pub fn is_repetition(&self) -> bool {
-        self.draw_table.contains(&self.hash)
-    }
-
-    #[inline(always)]
-    pub fn add_repetition(&mut self) {
-        self.draw_table.push(self.hash);
-    }
-
-    #[inline(always)]
-    pub fn remove_repetition(&mut self) {
-        self.draw_table.pop();
-    }
-
-    #[inline(always)]
     pub fn make_null_move(&mut self) -> (Option<Squares>, u64) {
         let mut old_en_passant = self.info.en_passant;
         let old_hash = self.hash;
@@ -623,7 +603,6 @@ impl FenParse<Fen, Board, FenParseError> for Board {
                 halfmove_clock,
                 fullmove_clock,
             },
-            draw_table: Vec::new(),
             zobrist: Zobrist::new(),
         };
 

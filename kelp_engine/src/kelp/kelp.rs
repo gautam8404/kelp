@@ -225,6 +225,9 @@ impl UCI for Kelp<'_> {
             self.board = Board::parse(Fen(fen)).unwrap();
         }
 
+        self.search.clear_draw(); // reset draw table
+        self.search.add_draw(self.board.hash); // add current position to draw table
+
         if point < arg.len() && arg[point] == "moves" {
             point += 1;
             while point < arg.len() {
@@ -233,17 +236,20 @@ impl UCI for Kelp<'_> {
                     break;
                 }
                 self.make_move(mov.unwrap());
+                self.search.add_draw(self.board.hash);
                 point += 1;
             }
         }
 
-        self.board.clear_draw_table();
-        self.search.tt.clear();
+        self.search.clear_tt();
+        self.search.reset();
     }
 
     fn handle_uci_newgame(&mut self) {
         self.board = Board::default();
-        self.search.tt.clear();
+        self.search.reset();
+        self.search.reset_tables();
+        self.search.add_draw(self.board.hash); // add current position to draw table
     }
 
     fn handle_go(&mut self, arg: &[&str]) {
