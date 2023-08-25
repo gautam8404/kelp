@@ -40,7 +40,6 @@ jobs:
         uses: actions/checkout@v3
       - name: Cache cargo & target directories
         uses: Swatinem/rust-cache@v2
-
       - name: Install rust
         uses: actions-rs/toolchain@v1
         with:
@@ -59,12 +58,12 @@ jobs:
       - name: Package as archive 
         shell: bash
         run: |
-          mkdir -p release/${{ matrix.platform.target }}
+          mkdir -p release/
           cd target/${{ matrix.platform.target }}/release
           if [[ "${{ matrix.platform.os }}" == "windows-latest" ]]; then
             7z a ../../release/${{ matrix.platform.name }} ${{ matrix.platform.bin }}
           else
-            tar czvf ../../release/${{ matrix.platform.name }} ${{ matrix.platform.bin }}
+            tar czvf ../../release/${{ matrix.platform.name }}.tar.gz ${{ matrix.platform.bin }}
           fi
           cd -
 
@@ -73,7 +72,7 @@ jobs:
         run: |
           cd release
           sha256sum ${{ matrix.platform.name }} > ${{ matrix.platform.name }}.sha256
-          cd -|
+          cd -
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v1
         with:
