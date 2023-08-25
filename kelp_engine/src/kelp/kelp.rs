@@ -237,6 +237,7 @@ impl UCI for Kelp<'_> {
             }
         }
 
+        self.board.clear_draw_table();
         self.search.tt.clear();
     }
 
@@ -350,9 +351,7 @@ impl UCI for Kelp<'_> {
     fn handle_unknown(&self, command: &str, arg: &[&str]) {
         match command {
             "help" => {
-                self.send("Kelp is a UCI compatible chess engine written in Rust");
-                self.send("It is released as a free software under GNU GPL v3 License.");
-                self.send("For more information visit https://github.com/gautam8404/kelp/#readme");
+                self.send(env!("CARGO_PKG_DESCRIPTION"))
             },
             "version" | "v" => {
                 self.send(env!("CARGO_PKG_VERSION"));

@@ -14,13 +14,14 @@
   <component name="ChangeListManager">
     <list default="true" id="f2d4903a-89c8-4b37-ab92-16886ff7428e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/board/board.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/board/board.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/kelp.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/search/eval.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/eval.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/search/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/search/negamax.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/negamax.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kelp_engine/src/kelp/search/transposition.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/kelp/search/transposition.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/kelp_engine/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/kelp_engine/src/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -245,7 +246,7 @@
     </configuration>
     <configuration name="test" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$/target/release" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="emulateTerminal" value="false" />
       <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
@@ -275,10 +276,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Cargo.test" />
+        <item itemvalue="Cargo.test" />
+        <item itemvalue="Cargo.test" />
         <item itemvalue="Cargo.Test kelp::board::board::tests::incremental_zobrist_test" />
         <item itemvalue="Cargo.test" />
-        <item itemvalue="Cargo.test" />
-        <item itemvalue="Cargo.Test kelp::mov_gen::perft::tests::start_pos_test" />
       </list>
     </recent_temporary>
   </component>
@@ -342,7 +343,8 @@
       <workItem from="1692638438063" duration="17880000" />
       <workItem from="1692694811175" duration="8251000" />
       <workItem from="1692703069332" duration="334000" />
-      <workItem from="1692866513367" duration="7861000" />
+      <workItem from="1692866513367" duration="18581000" />
+      <workItem from="1692954482921" duration="2694000" />
     </task>
     <servers />
   </component>
@@ -394,6 +396,17 @@
       <path value="$PROJECT_DIR$/kelp_engine" />
       <path value="$PROJECT_DIR$/kelp_perft" />
     </ignored-roots>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/kelp_engine/src/kelp/search/negamax.rs</url>
+          <line>85</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

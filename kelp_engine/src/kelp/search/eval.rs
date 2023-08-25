@@ -16,7 +16,7 @@ pub fn eval(board: &Board) -> i32 {
         let bb = board.get_bitboard(piece);
 
         for bit in bb {
-            score += MATERIAL_SCORE[piece as usize];
+            // score += MATERIAL_SCORE[piece as usize];
             match piece {
                 WhitePawn => score += PAWN_SCORES[MIRROR[bit as usize] as usize],
                 WhiteKnight => score += KNIGHT_SCORES[MIRROR[bit as usize] as usize],

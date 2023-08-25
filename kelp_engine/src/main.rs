@@ -26,6 +26,7 @@ use crate::kelp::board::moves::Move;
 use crate::kelp::search::eval::eval;
 use crate::kelp::search::negamax::Negamax;
 use kelp::STOP;
+use crate::kelp::search::MATERIAL_SCORE;
 
 fn ptest(gen: &mut MovGen) {
     use crate::kelp::mov_gen::perft::*;
@@ -68,8 +69,10 @@ fn main() {
     let debug = false;
     if debug {
         let mut table = LookupTable::new();
-        let kelp = Kelp::new(&mut table);
-        // kelp.handle_position(&["fen", "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1"]);
+        let mut kelp = Kelp::new(&mut table);
+        kelp.handle_position(&["fen", "8/8/8/8/8/8/8/1N4N1 w - - 0 1"]);
+        let a = MATERIAL_SCORE[WhiteKnight as usize];
+        println!("{}", a);
         //
         //
         // let mut nodes = 0;

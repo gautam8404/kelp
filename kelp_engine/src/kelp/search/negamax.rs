@@ -82,6 +82,10 @@ impl Negamax {
         let mut entry_def = Entry::default();
         entry_def.flag = EntryType::Alpha;
 
+        if ply != 0 && board.is_repetition() {
+            return 0;
+        }
+
         let pv_node = beta - alpha > 1;
 
         if let Some(entry) = self.tt.get(board.hash) {
@@ -174,13 +178,16 @@ impl Negamax {
         let mut moves_searched = 0;
 
         for moves in moves_list.iter() {
+            board.add_repetition();
             let a = board.make_move(*moves, false);
             if a.is_none() {
+                board.remove_repetition();
                 continue;
             }
 
             if board.is_check_opp(gen) {
                 board.unmake_move(a.unwrap());
+                board.remove_repetition();
                 continue;
             }
 
@@ -211,6 +218,7 @@ impl Negamax {
                 }
             }
 
+            board.remove_repetition();
             board.unmake_move(a.unwrap());
 
             if STOP.load(Ordering::Relaxed) {
@@ -319,17 +327,22 @@ impl Negamax {
         });
 
         for m in moves_list.iter() {
+            board.add_repetition();
+
             let a = board.make_move(*m, true);
             if a.is_none() {
+                board.remove_repetition();
                 continue;
             }
             if board.is_check_opp(gen) {
                 board.unmake_move(a.unwrap());
+                board.remove_repetition();
                 continue;
             }
 
             let score = -self.quiescence(-beta, -alpha, board, gen, ply + 1);
 
+            board.remove_repetition();
             board.unmake_move(a.unwrap());
 
             if score >= beta {

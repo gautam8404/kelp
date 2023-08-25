@@ -1,3 +1,4 @@
+use std::collections::{HashMap, HashSet};
 use super::fen::Fen;
 use super::fen::{FenParse, FenParseError};
 use super::moves::{Castle, CastlingRights};
@@ -27,6 +28,7 @@ pub struct Board {
     pub phase: GamePhase,
     pub info: BoardInfo,
     pub move_history: MoveArray,
+    draw_table: Vec<u64>,
     zobrist: Zobrist, //TODO: make this private
 }
 
@@ -200,6 +202,10 @@ impl Board {
     #[allow(dead_code)]
     pub fn generated_hash(&self) -> u64 {
         self.zobrist.get_key(self)
+    }
+
+    pub fn clear_draw_table(&mut self) {
+        self.draw_table.clear();
     }
 }
 
@@ -452,23 +458,47 @@ impl Board {
         if color == Black && self.info.fullmove_clock > 1 {
             self.info.fullmove_clock -= 1;
         }
+
+        // update hash in draw table
+        // self.remove_repetition();
     }
 
+    #[inline(always)]
+    pub fn is_repetition(&self) -> bool {
+        self.draw_table.contains(&self.hash)
+    }
+
+    #[inline(always)]
+    pub fn add_repetition(&mut self) {
+        self.draw_table.push(self.hash);
+    }
+
+    #[inline(always)]
+    pub fn remove_repetition(&mut self) {
+        self.draw_table.pop();
+    }
+
+    #[inline(always)]
     pub fn make_null_move(&mut self) -> (Option<Squares>, u64) {
         let mut old_en_passant = self.info.en_passant;
         let old_hash = self.hash;
         self.clear_en_passant();
         self.toggle_turn();
 
+        // self.add_repetition();
+
         (old_en_passant, old_hash)
     }
 
+    #[inline(always)]
     pub fn unmake_null_move(&mut self, en_passant: Option<Squares>, hash: u64) {
         if en_passant.is_some() {
             self.set_en_passant(en_passant.unwrap());
         }
         self.toggle_turn();
         self.hash = hash;
+
+        // self.remove_repetition();
     }
 }
 
@@ -593,6 +623,7 @@ impl FenParse<Fen, Board, FenParseError> for Board {
                 halfmove_clock,
                 fullmove_clock,
             },
+            draw_table: Vec::new(),
             zobrist: Zobrist::new(),
         };
 
