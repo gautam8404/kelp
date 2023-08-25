@@ -1,5 +1,6 @@
 use super::{
-    BISHOP_SCORES, KING_SCORES, KNIGHT_SCORES, MATERIAL_SCORE, MVV_LVA, PAWN_SCORES, ROOK_SCORES, QUEEN_SCORES
+    BISHOP_SCORES, KING_SCORES, KNIGHT_SCORES, MATERIAL_SCORE, MVV_LVA, PAWN_SCORES, QUEEN_SCORES,
+    ROOK_SCORES,
 };
 use crate::kelp::board::board::Board;
 use crate::kelp::board::moves::Move;
@@ -31,7 +32,6 @@ pub fn eval(board: &Board) -> i32 {
                 BlackRook => score -= ROOK_SCORES[bit as usize],
                 BlackKing => score -= KING_SCORES[bit as usize],
                 BlackQueen => score -= QUEEN_SCORES[bit as usize],
-
             }
         }
     }

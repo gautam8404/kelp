@@ -1,4 +1,3 @@
-use std::collections::{HashMap, HashSet};
 use super::fen::Fen;
 use super::fen::{FenParse, FenParseError};
 use super::moves::{Castle, CastlingRights};
@@ -12,6 +11,7 @@ use crate::kelp::board::piece::Color::*;
 use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::Squares::{self, *};
 use crate::kelp::{kelp_core::bitboard::BitBoard, BitBoardArray, BoardInfo, GamePhase, GameState};
+use std::collections::{HashMap, HashSet};
 
 // strum
 use std::fmt::{Debug, Display};
@@ -20,7 +20,7 @@ use strum::IntoEnumIterator;
 
 const STARTPOS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-#[derive(Clone, Eq, PartialEq)] 
+#[derive(Clone, Eq, PartialEq)]
 pub struct Board {
     pub bitboards: BitBoardArray,
     pub hash: u64,
@@ -28,7 +28,7 @@ pub struct Board {
     pub phase: GamePhase,
     pub info: BoardInfo,
     pub move_history: MoveArray,
-    zobrist: Zobrist, 
+    zobrist: Zobrist,
 }
 
 impl Default for Board {

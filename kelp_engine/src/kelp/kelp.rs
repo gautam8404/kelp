@@ -3,10 +3,10 @@ use super::board::moves::Move;
 use super::kelp_core::lookup_table::LookupTable;
 use super::mov_gen::generator::MovGen;
 use super::uci_trait::UCI;
-use super::{TimeControl, SearchMoveResult, SearchMoveResultExtended};
 use super::{stop_interval, STOP};
+use super::{SearchMoveResult, SearchMoveResultExtended, TimeControl};
 use crate::kelp::board::fen::{Fen, FenParse};
-use crate::kelp::board::piece::BoardPiece::{*};
+use crate::kelp::board::piece::BoardPiece::*;
 use crate::kelp::search::negamax::Negamax;
 use log;
 use std::sync::atomic::Ordering;
@@ -106,9 +106,9 @@ impl<'a> Kelp<'a> {
             let mut mate_in: Option<i32> = None;
 
             if score > -Negamax::MATE_VALUE && score < -Negamax::MATE_SCORE {
-                mate_in = Some(-(score + Negamax::MATE_VALUE)/2 - 1);
+                mate_in = Some(-(score + Negamax::MATE_VALUE) / 2 - 1);
             } else if score > Negamax::MATE_SCORE && score < Negamax::MATE_VALUE {
-                mate_in = Some((Negamax::MATE_VALUE - score)/2 + 1);
+                mate_in = Some((Negamax::MATE_VALUE - score) / 2 + 1);
             }
 
             let res = SearchMoveResultExtended {
@@ -164,11 +164,10 @@ impl<'a> Kelp<'a> {
 
         let mut mate_in: Option<i32> = None;
 
-
         if score > -Negamax::MATE_VALUE && score < -Negamax::MATE_SCORE {
-            mate_in = Some(-(score + Negamax::MATE_VALUE)/2 - 1);
+            mate_in = Some(-(score + Negamax::MATE_VALUE) / 2 - 1);
         } else if score > Negamax::MATE_SCORE && score < Negamax::MATE_VALUE {
-            mate_in = Some((Negamax::MATE_VALUE - score)/2 + 1);
+            mate_in = Some((Negamax::MATE_VALUE - score) / 2 + 1);
         }
 
         SearchMoveResult {
@@ -311,8 +310,7 @@ impl UCI for Kelp<'_> {
             depth = Negamax::MAX_DEPTH;
         }
 
-
-        if time_to_search.is_some()  && !time_control.infinite && time_to_search.unwrap() >= 0 {
+        if time_to_search.is_some() && !time_control.infinite && time_to_search.unwrap() >= 0 {
             let time_to_search = time_to_search.unwrap_or(0);
             let duration = Duration::from_millis(time_to_search as u64);
             stop_interval(duration);
@@ -332,10 +330,18 @@ impl UCI for Kelp<'_> {
         let mut name = env!("CARGO_PKG_NAME").to_string();
         name = name.split("_").collect::<Vec<&str>>()[0].to_string();
         //capitalize first letter
-        name = name.chars().enumerate().map(|(i, c)| if i == 0 { c.to_ascii_uppercase() } else { c }).collect(); //OOF
+        name = name
+            .chars()
+            .enumerate()
+            .map(|(i, c)| if i == 0 { c.to_ascii_uppercase() } else { c })
+            .collect(); //OOF
         name = format!("{} {}", name, env!("CARGO_PKG_VERSION"));
 
-        let author = env!("CARGO_PKG_AUTHORS").to_string().split_whitespace().collect::<Vec<&str>>()[0].to_string();
+        let author = env!("CARGO_PKG_AUTHORS")
+            .to_string()
+            .split_whitespace()
+            .collect::<Vec<&str>>()[0]
+            .to_string();
 
         self.send(format!("id name {}", name).as_str());
         self.send(format!("id author {}", author).as_str());
@@ -356,12 +362,10 @@ impl UCI for Kelp<'_> {
 
     fn handle_unknown(&self, command: &str, arg: &[&str]) {
         match command {
-            "help" => {
-                self.send(env!("CARGO_PKG_DESCRIPTION"))
-            },
+            "help" => self.send(env!("CARGO_PKG_DESCRIPTION")),
             "version" | "v" => {
                 self.send(env!("CARGO_PKG_VERSION"));
-            },
+            }
             _ => {
                 self.send(
                     format!(

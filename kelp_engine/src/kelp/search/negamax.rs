@@ -1,11 +1,11 @@
+use super::draw_table::DrawTable;
+use super::transposition::{Entry, EntryType, TranspositionTable};
 use crate::kelp::board::board::Board;
 use crate::kelp::board::moves::Move;
 use crate::kelp::mov_gen::generator::MovGen;
 use crate::kelp::search::eval::{eval, get_mvv_lva};
 use crate::kelp::STOP;
 use std::sync::atomic::Ordering;
-use super::transposition::{TranspositionTable, EntryType, Entry};
-use super::draw_table::DrawTable;
 
 pub struct Negamax {
     pub nodes: u64,
@@ -69,7 +69,6 @@ impl Negamax {
         }
     }
 
-
     #[inline(always)]
     pub fn negamax(
         &mut self,
@@ -92,8 +91,7 @@ impl Negamax {
         let pv_node = beta - alpha > 1;
 
         if let Some(entry) = self.tt.get(board.hash) {
-            if entry.depth >= depth as u8 && entry.hash == board.hash && ply != 0  && !pv_node {
-
+            if entry.depth >= depth as u8 && entry.hash == board.hash && ply != 0 && !pv_node {
                 match entry.flag {
                     EntryType::Exact => {
                         self.pv_length[ply] = ply + 1;
@@ -105,15 +103,18 @@ impl Negamax {
                             return entry.score - ply as i32;
                         }
                         return entry.score;
-                    },
-                    EntryType::Alpha => if entry.score <= alpha {
-                        return alpha;
-                    },
-                    EntryType::Beta => if entry.score >= beta {
-                        return beta;
-                    },
+                    }
+                    EntryType::Alpha => {
+                        if entry.score <= alpha {
+                            return alpha;
+                        }
+                    }
+                    EntryType::Beta => {
+                        if entry.score >= beta {
+                            return beta;
+                        }
+                    }
                 }
-
             }
         }
 
@@ -233,7 +234,6 @@ impl Negamax {
             }
 
             moves_searched += 1;
-
 
             if score > alpha {
                 if moves.capture.is_none() {
@@ -374,7 +374,8 @@ impl Negamax {
         self.tt.clear();
     }
 
-    pub fn reset(&mut self) { // for iterative deepening
+    pub fn reset(&mut self) {
+        // for iterative deepening
         self.nodes = 0;
         self.killer_moves = [[None; Self::MAX_DEPTH]; 2];
         self.history_moves = [[0; 64]; 12];
@@ -384,7 +385,8 @@ impl Negamax {
         self.score_pv = false;
     }
 
-    pub fn reset_tables(&mut self) { //for position command and new game
+    pub fn reset_tables(&mut self) {
+        //for position command and new game
         self.tt.clear();
         self.draw_table.clear();
     }

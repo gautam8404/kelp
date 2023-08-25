@@ -7,7 +7,6 @@ pub struct DrawTable {
 }
 
 impl DrawTable {
-
     pub fn new() -> Self {
         Self {
             index: 0,

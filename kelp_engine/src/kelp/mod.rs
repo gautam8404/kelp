@@ -161,8 +161,8 @@ impl Sub<u8> for Squares {
     }
 }
 
-use Squares::*;
 use crate::kelp::board::moves::Move;
+use Squares::*;
 
 #[rustfmt::skip]
 const MIRROR: [Squares; 64] = [
@@ -263,7 +263,6 @@ impl Display for SearchMoveResult {
     }
 }
 
-
 pub struct SearchMoveResultExtended {
     pub best_move: Option<Move>,
     pub score: i32,
@@ -301,5 +300,4 @@ impl Display for SearchMoveResultExtended {
 
         write!(f, "{}", info)
     }
-
 }

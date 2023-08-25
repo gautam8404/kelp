@@ -1,9 +1,9 @@
 use super::piece::{BoardPiece, Color};
 use crate::kelp::board::board::Board;
 use crate::kelp::Squares;
+use crate::kelp::ZobristKey;
 use rand_chacha::rand_core::{RngCore, SeedableRng};
 use strum::IntoEnumIterator;
-use crate::kelp::ZobristKey;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Zobrist {

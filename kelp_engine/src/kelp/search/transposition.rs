@@ -1,5 +1,5 @@
+use crate::kelp::board::moves::Move;
 use std::collections::HashMap;
-use crate::kelp::board::moves::{Move};
 
 const SIZE_MB: usize = 64;
 const SIZE_BYTES: usize = SIZE_MB * 1024 * 1024;
@@ -69,7 +69,6 @@ impl TranspositionTable {
         self.table.insert(hash, entry);
     }
 
-
     pub fn get_size(&self) -> usize {
         self.table.len()
     }
@@ -96,9 +95,7 @@ impl TranspositionTable {
         self.table.len()
     }
 
-
     pub fn get_hash_full_percentage(&self) -> f64 {
         self.table.len() as f64 / self.size as f64 * 100.0
     }
-
 }

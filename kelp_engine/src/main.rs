@@ -1,6 +1,6 @@
 mod kelp;
-extern crate simplelog;
 extern crate log;
+extern crate simplelog;
 
 use crate::kelp::board::fen::FenParse;
 use crate::kelp::board::piece::{BoardPiece, Color};
@@ -25,8 +25,8 @@ use simplelog::{Config, LevelFilter, WriteLogger};
 use crate::kelp::board::moves::Move;
 use crate::kelp::search::eval::eval;
 use crate::kelp::search::negamax::Negamax;
-use kelp::STOP;
 use crate::kelp::search::MATERIAL_SCORE;
+use kelp::STOP;
 
 fn ptest(gen: &mut MovGen) {
     use crate::kelp::mov_gen::perft::*;

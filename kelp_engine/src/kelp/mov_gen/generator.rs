@@ -5,7 +5,7 @@ use crate::kelp::kelp_core::lookup_table::LookupTable;
 use crate::kelp::{
     board::moves::{Move, MoveList, MoveType},
     board::piece::{
-        BoardPiece::{*},
+        BoardPiece::*,
         Color::{self, *},
     },
     Squares::{self, *},
