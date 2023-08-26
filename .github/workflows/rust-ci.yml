@@ -35,11 +35,6 @@ jobs:
             target: x86_64-pc-windows-msvc
             name: kelp-windows-x86_64.7z
             bin: kelp.exe
-
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            name: kelp-macos-x86_64.tar.gz
-            bin: kelp
     steps:
       - name: Checkout
         uses: actions/checkout@v3
