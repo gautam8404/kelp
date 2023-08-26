@@ -33,37 +33,37 @@ jobs:
 
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            name: kelp-windows-x86_64.zip
+            name: kelp-windows-x86_64.7z
             bin: kelp.exe
+
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            name: kelp-macos-x86_64.tar.gz
+            bin: kelp
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Cache cargo & target directories
-        uses: Swatinem/rust-cache@v2
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-          target: ${{ matrix.platform.target }}
+        uses: Swatinem/rust-cache@v2.6.2
 
       - name: Build binary
-        uses: actions-rs/cargo@v1
+        uses: houseabsolute/actions-rust-cross@v0
         with:
-          use-cross: true
-          command: build
-          args: --release --target ${{ matrix.platform.target }}
-      
-      - name: Package as archive 
+          command: "build"
+          args: --locked --release
+          target: ${{ matrix.platform.target }}
+          toolchain: stable
+
+      - name: Package as archive
         shell: bash
         run: |
           mkdir -p release/
           cd target/${{ matrix.platform.target }}/release
           if [[ "${{ matrix.platform.os }}" == "windows-latest" ]]; then
-            7z a ../../release/${{ matrix.platform.name }} ${{ matrix.platform.bin }}
+            7z a ../../../release/${{ matrix.platform.name }} ${{ matrix.platform.bin }}
           else
-            tar czvf ../../release/${{ matrix.platform.name }}.tar.gz ${{ matrix.platform.bin }}
+            tar czvf ../../../release/${{ matrix.platform.name }} ${{ matrix.platform.bin }}
           fi
           cd -
 
@@ -81,5 +81,8 @@ jobs:
             release/${{ matrix.platform.name }}.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-       
+
+
+permissions:
+  contents: write
         
