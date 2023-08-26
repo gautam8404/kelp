@@ -108,7 +108,7 @@ impl Eval {
     }
 
     #[inline(always)]
-    pub fn get_pawn_score(&self, color: Color, square: Squares, board: Board) -> i32 {
+    pub fn get_pawn_score(&self, color: Color, square: Squares, board: &Board) -> i32 {
         let mut score = 0;
 
         match color {
@@ -160,7 +160,7 @@ impl Eval {
     }
 
     #[inline(always)]
-    pub fn get_knight_score(&self, color: Color, square: Squares, board: Board, gen: MovGen) -> i32 {
+    pub fn get_knight_score(&self, color: Color, square: Squares, board: &Board, gen: &MovGen) -> i32 {
         let mut score = 0;
 
         match color {
@@ -172,7 +172,7 @@ impl Eval {
     }
 
     #[inline(always)]
-    pub fn get_bishop_score(&self, color: Color, square: Squares, board: Board, gen: MovGen) -> i32 {
+    pub fn get_bishop_score(&self, color: Color, square: Squares, board: &Board, gen: &MovGen) -> i32 {
         let mut score = 0;
 
         match color {
@@ -197,7 +197,7 @@ impl Eval {
     }
 
     #[inline(always)]
-    pub fn get_rook_score(&self, color: Color, square: Squares, board: Board, gen: MovGen) -> i32 {
+    pub fn get_rook_score(&self, color: Color, square: Squares, board: &Board, gen: &MovGen) -> i32 {
         let mut score = 0;
 
         match color {
@@ -231,7 +231,7 @@ impl Eval {
     }
 
     #[inline(always)]
-    pub fn get_queen_score(&self, color: Color, square: Squares, board: Board, gen: MovGen) -> i32 {
+    pub fn get_queen_score(&self, color: Color, square: Squares, board: &Board, gen: &MovGen) -> i32 {
         let mut score = 0;
 
         match color {
@@ -255,7 +255,7 @@ impl Eval {
     }
 
     #[inline(always)]
-    pub fn get_king_score(&self, color: Color, square: Squares, board: Board, gen: MovGen) -> i32 {
+    pub fn get_king_score(&self, color: Color, square: Squares, board: &Board, gen: &MovGen) -> i32 {
         let mut score = 0;
 
         match color {
@@ -305,135 +305,23 @@ impl Eval {
                 let bit_sq = Squares::from_repr(bit).unwrap();
                 score += MATERIAL_SCORE[piece as usize];
                 match piece {
-                    WhitePawn => {
-                        score += PAWN_SCORES[MIRROR[bit as usize] as usize];
-
-                        let doubled = (board.get_bitboard(WhitePawn) & self.get_file_mask(bit_sq))
-                            .count_bits();
-                        if doubled > 1 {
-                            score += DOUBLE_PAWN_PENALTY * doubled as i32;
-                        }
-
-                        if (board.get_bitboard(WhitePawn) & self.get_isolated_mask(bit_sq))
-                            .is_empty()
-                        {
-                            score += ISOLATED_PAWN_PENALTY;
-                        }
-
-                        if (self.get_passed_mask(White, bit_sq) & board.get_bitboard(BlackPawn))
-                            .is_empty()
-                        {
-                            score += PASSED_PAWN_BONUS[bit_sq.rank() as usize];
-                        }
+                    WhitePawn | BlackPawn => {
+                        score += self.get_pawn_score(piece.get_color(), bit_sq, board);
                     }
-                    WhiteKnight => score += KNIGHT_SCORES[MIRROR[bit as usize] as usize],
-
-                    WhiteBishop => {
-                        score += BISHOP_SCORES[MIRROR[bit as usize] as usize];
-
-                        // mobility bonus
-                        score += (gen.table.get_bishop_attacks(bit, board.get_occ())).count_bits()
-                            as i32;
+                    WhiteKnight | BlackKnight => {
+                        score += self.get_knight_score(piece.get_color(), bit_sq, board, gen);
                     }
-                    WhiteRook => {
-                        score += ROOK_SCORES[MIRROR[bit as usize] as usize];
-
-                        if (board.get_bitboard(WhitePawn) & self.get_file_mask(bit_sq)).is_empty() {
-                            score += SEMI_OPEN_FILE_SCORE;
-                        } else if ((board.get_bitboard(WhitePawn) | board.get_bitboard(BlackPawn))
-                            & self.get_file_mask(bit_sq))
-                        .is_empty()
-                        {
-                            score += OPEN_FILE_SCORE;
-                        }
+                    WhiteBishop | BlackBishop => {
+                        score += self.get_bishop_score(piece.get_color(), bit_sq, board, gen);
                     }
-
-                    WhiteKing => {
-                        score += KING_SCORES[MIRROR[bit as usize] as usize];
-
-                        if (board.get_bitboard(WhitePawn) & self.get_file_mask(bit_sq)).is_empty() {
-                            score -= SEMI_OPEN_FILE_SCORE;
-                        } else if ((board.get_bitboard(WhitePawn) | board.get_bitboard(BlackPawn))
-                            & self.get_file_mask(bit_sq))
-                            .is_empty()
-                        {
-                            score -= OPEN_FILE_SCORE;
-                        }
-
-                        // king shield bonus
-                        score += ((gen.table.get_knight_attacks(bit) & board.get_white_occ()).count_bits() * KING_SHIELD_BONUS as u8) as i32;
+                    WhiteRook | BlackRook => {
+                        score += self.get_rook_score(piece.get_color(), bit_sq, board, gen);
                     }
-
-                    WhiteQueen => {
-                        score += QUEEN_SCORES[MIRROR[bit as usize] as usize];
-
-                        // mobility bonus
-                        score +=
-                            (gen.table.get_queen_attacks(bit, board.get_occ())).count_bits() as i32;
+                    WhiteQueen | BlackQueen => {
+                        score += self.get_queen_score(piece.get_color(), bit_sq, board, gen);
                     }
-
-                    BlackPawn => {
-                        score -= PAWN_SCORES[bit as usize];
-
-                        let doubled = (board.get_bitboard(BlackPawn) & self.get_file_mask(bit_sq))
-                            .count_bits();
-                        if doubled > 1 {
-                            score -= DOUBLE_PAWN_PENALTY * doubled as i32;
-                        }
-
-                        if (board.get_bitboard(BlackPawn) & self.get_isolated_mask(bit_sq))
-                            .is_empty()
-                        {
-                            score -= ISOLATED_PAWN_PENALTY;
-                        }
-
-                        if (self.get_passed_mask(Black, bit_sq) & board.get_bitboard(WhitePawn))
-                            .is_empty()
-                        {
-                            score -= PASSED_PAWN_BONUS[7 - bit_sq.rank() as usize];
-                        }
-                    }
-                    BlackKnight => score -= KNIGHT_SCORES[bit as usize],
-                    BlackBishop => {
-                        score -= BISHOP_SCORES[bit as usize];
-
-                        // mobility bonus
-                        score -= (gen.table.get_bishop_attacks(bit, board.get_occ())).count_bits()
-                            as i32;
-                    }
-                    BlackRook => {
-                        score -= ROOK_SCORES[bit as usize];
-
-                        if (board.get_bitboard(BlackPawn) & self.get_file_mask(bit_sq)).is_empty() {
-                            score -= SEMI_OPEN_FILE_SCORE;
-                        } else if ((board.get_bitboard(WhitePawn) | board.get_bitboard(BlackPawn))
-                            & self.get_file_mask(bit_sq))
-                        .is_empty()
-                        {
-                            score -= OPEN_FILE_SCORE;
-                        }
-                    }
-                    BlackKing => {
-                        score -= KING_SCORES[bit as usize];
-
-                        if (board.get_bitboard(BlackPawn) & self.get_file_mask(bit_sq)).is_empty() {
-                            score += SEMI_OPEN_FILE_SCORE;
-                        } else if ((board.get_bitboard(WhitePawn) | board.get_bitboard(BlackPawn))
-                            & self.get_file_mask(bit_sq))
-                        .is_empty()
-                        {
-                            score += OPEN_FILE_SCORE;
-                        }
-
-                        // king shield bonus
-                        score -= ((gen.table.get_knight_attacks(bit) & board.get_black_occ()).count_bits() * KING_SHIELD_BONUS as u8) as i32;
-                    }
-                    BlackQueen => {
-                        score -= QUEEN_SCORES[bit as usize];
-
-                        // mobility bonus
-                        score -=
-                            (gen.table.get_queen_attacks(bit, board.get_occ())).count_bits() as i32;
+                    WhiteKing | BlackKing => {
+                        score += self.get_king_score(piece.get_color(), bit_sq, board, gen);
                     }
                 }
             }
