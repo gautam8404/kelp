@@ -3,7 +3,7 @@ use super::transposition::{Entry, EntryType, TranspositionTable};
 use crate::kelp::board::board::Board;
 use crate::kelp::board::moves::Move;
 use crate::kelp::mov_gen::generator::MovGen;
-use crate::kelp::search::eval::{eval, get_mvv_lva};
+use crate::kelp::search::eval::{get_mvv_lva, Eval};
 use crate::kelp::STOP;
 use std::sync::atomic::Ordering;
 
@@ -14,6 +14,7 @@ pub struct Negamax {
     pv_length: [usize; Self::MAX_DEPTH],
     pv_table: [[Option<Move>; Self::MAX_DEPTH]; Self::MAX_DEPTH],
     draw_table: DrawTable,
+    eval: Eval,
     pub follow_pv: bool,
     pub score_pv: bool,
     pub tt: TranspositionTable,
@@ -29,6 +30,7 @@ impl Default for Negamax {
             pv_length: [0; Self::MAX_DEPTH],
             pv_table: [[None; Self::MAX_DEPTH]; Self::MAX_DEPTH],
             draw_table: DrawTable::new(),
+            eval: Eval::default(),
             follow_pv: false,
             score_pv: false,
             tt: TranspositionTable::new(),
@@ -123,7 +125,7 @@ impl Negamax {
         }
 
         if ply >= Self::MAX_DEPTH - 1 {
-            return eval(board);
+            return self.eval.evaluate(board, gen);
         }
 
         self.nodes += 1;
@@ -317,7 +319,7 @@ impl Negamax {
         ply: usize,
     ) -> i32 {
         self.nodes += 1;
-        let eval = eval(board);
+        let eval = self.eval.evaluate(board, gen);
 
         if eval >= beta {
             return beta;

@@ -2,10 +2,14 @@ mod kelp;
 extern crate log;
 extern crate simplelog;
 
-use kelp::kelp_core::lookup_table::LookupTable;
 use crate::kelp::kelp::Kelp;
+use crate::kelp::search::eval::Eval;
 use crate::kelp::uci_trait::UCI;
+use crate::kelp::{MIRROR, Squares};
+use kelp::kelp_core::lookup_table::LookupTable;
+use kelp_engine::kelp::Squares::B2;
 use simplelog::{Config, LevelFilter, WriteLogger};
+use crate::kelp::Squares::E8;
 
 fn main() {
     let file_path = std::env::var("KELP_LOG");
@@ -27,9 +31,24 @@ fn main() {
 
     let d_fen = "r3k2r/p1Ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ";
 
+    // let mut table = LookupTable::default();
+    // let mut kelp = Kelp::new(&mut table);
+    // kelp.uci_loop();
 
-   let mut table = LookupTable::default();
-   let mut kelp = Kelp::new(&mut table);
-   kelp.uci_loop();
+    let debug = true;
 
+    if debug {
+        let eval = Eval::default();
+        // for i in 0..8 {
+        //     // println!("{}", eval.file_mask[i]);
+        //     println!("{}", eval.isolated_mask[i])
+        // }
+        println!("{}", eval.passed_mask[1][Squares::A8 as usize]);
+
+        let debug = true;
+    } else {
+        let mut table = LookupTable::default();
+        let mut kelp = Kelp::new(&mut table);
+        kelp.uci_loop();
+    }
 }

@@ -59,6 +59,11 @@ impl BitBoard {
     pub fn empty() -> BitBoard {
         BitBoard(0)
     }
+
+    #[inline(always)]
+    pub fn is_empty(&self) -> bool {
+        self.0 == 0
+    }
 }
 impl PartialEq for BitBoard {
     fn eq(&self, other: &Self) -> bool {
