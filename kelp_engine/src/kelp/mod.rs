@@ -29,9 +29,9 @@ pub type ZobristKey = u64;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum GamePhase {
-    Opening,
-    MiddleGame,
-    EndGame,
+    Opening = 0,
+    EndGame = 1,
+    MiddleGame = 2,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]

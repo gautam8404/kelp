@@ -205,6 +205,7 @@ impl Board {
     pub fn is_fifty_move_draw(&self) -> bool {
         self.info.halfmove_clock >= 100
     }
+
 }
 
 // Make / Unmake move and helper functions

@@ -41,7 +41,7 @@ impl Default for Negamax {
 impl Negamax {
     pub const MIN: i32 = -50000;
     pub const MAX: i32 = 50000;
-    pub const MAX_DEPTH: usize = 64;
+    pub const MAX_DEPTH: usize = 128;
     pub const MATE_VALUE: i32 = 49000;
     pub const MATE_SCORE: i32 = 48000;
 
