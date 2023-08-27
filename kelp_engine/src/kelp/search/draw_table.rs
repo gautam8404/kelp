@@ -1,5 +1,6 @@
 use crate::kelp::ZobristKey;
-const MAX_DRAW_TABLE_SIZE: usize = 128;
+const MAX_DRAW_TABLE_SIZE: usize = 200;
+
 
 pub struct DrawTable {
     index: usize,

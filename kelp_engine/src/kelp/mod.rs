@@ -188,7 +188,7 @@ pub struct TimeControl {
 }
 
 impl TimeControl {
-    pub const MOVES_TO_GO: i128 = 30;
+    pub const MOVES_TO_GO: i128 = 40;
     const SAFETY_MARGIN: i128 = 50;
     const MAX_USAGE: f64 = 0.8;
 

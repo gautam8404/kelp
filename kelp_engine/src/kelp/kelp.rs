@@ -337,11 +337,9 @@ impl UCI for Kelp<'_> {
             .collect(); //OOF
         name = format!("{} {}", name, env!("CARGO_PKG_VERSION"));
 
-        let author = env!("CARGO_PKG_AUTHORS")
-            .to_string()
-            .split_whitespace()
-            .collect::<Vec<&str>>()[0]
-            .to_string();
+        let mut author = env!("CARGO_PKG_AUTHORS").split(" ").collect::<Vec<&str>>();
+        author.pop();
+        let author = author.join(" ");
 
         self.send(format!("id name {}", name).as_str());
         self.send(format!("id author {}", author).as_str());
