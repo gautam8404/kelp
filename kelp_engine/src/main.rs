@@ -33,7 +33,7 @@ fn main() {
     let tricky = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 ";
     let empty = "8/8/8/8/8/8/8/8 w KQ - 0 1";
 
-    let d_fen = "rn6/pppppppp/8/8/8/8/PPPPPPPP/RN6 w KQkq - 0 1";
+    let d_fen = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1";
 
     // let mut table = LookupTable::default();
     // let mut kelp = Kelp::new(&mut table);
@@ -43,16 +43,16 @@ fn main() {
 
     if debug {
         let eval = Eval::default();
-        let board = Board::parse(Fen(d_fen.to_string())).unwrap();
+        let board = Board::parse(Fen(tricky.to_string())).unwrap();
         let mut table = LookupTable::default();
         table.populate();
         let movgen = MovGen::new(&table);
 
         println!("{}", board);
         println!("{}", eval.evaluate(&board, &movgen));
-
-        println!("{}", Squares::A2.rank());
-        println!("{}", Squares::A7.rank());
+        //
+        // println!("{}", Squares::A2.rank());
+        // println!("{}", Squares::A7.rank());
         // for i in 0..8 {
         //     // println!("{}", eval.file_mask[i]);
         //     println!("{}", eval.isolated_mask[i])

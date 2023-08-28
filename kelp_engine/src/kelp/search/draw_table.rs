@@ -38,12 +38,22 @@ impl DrawTable {
 
     #[inline(always)]
     pub fn is_repeat(&self, key: ZobristKey) -> bool {
+        // for i in 0..self.index {
+        //     if self.table[i] == key {
+        //         return true;
+        //     }
+        // }
+        let mut count = 0;
         for i in 0..self.index {
             if self.table[i] == key {
-                return true;
+                count += 1;
+
+                if count >= 2 {
+                    return true;
+                }
             }
         }
 
-        false
+        count >= 2
     }
 }

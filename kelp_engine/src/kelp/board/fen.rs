@@ -15,6 +15,21 @@ pub enum FenParseError {
     InvalidFullMoveClock(String),
 }
 
+impl Display for FenParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FenParseError::InvalidFen(s) => write!(f, "InvalidFen: {}", s),
+            FenParseError::InvalidPiece(s) => write!(f, "InvalidPiece: {}", s),
+            FenParseError::InvalidTurn(s) => write!(f, "InvalidTurn: {}", s),
+            FenParseError::InvalidCastlingRights(s) => write!(f, "InvalidCastlingRights: {}", s),
+            FenParseError::InvalidEnPassant(s) => write!(f, "InvalidEnPassant: {}", s),
+            FenParseError::InvalidHalfMoveClock(s) => write!(f, "InvalidHalfMoveClock: {}", s),
+            FenParseError::InvalidFullMoveClock(s) => write!(f, "InvalidFullMoveClock: {}", s),
+        }
+    }
+
+}
+
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct Fen(pub String);
 

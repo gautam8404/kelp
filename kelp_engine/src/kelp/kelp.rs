@@ -221,7 +221,11 @@ impl UCI for Kelp<'_> {
                 fen.push(' ');
                 point += 1;
             }
-            self.board = Board::parse(Fen(fen)).unwrap();
+            let board = Board::parse(Fen(fen));
+            if board.is_err() {
+                panic!("{}", board.err().unwrap());
+            }
+            self.board = board.unwrap();
         }
 
         self.search.clear_draw(); // reset draw table
