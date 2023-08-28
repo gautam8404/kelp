@@ -116,7 +116,7 @@ impl Eval {
         }
     }
 
-    pub fn init_orhtogonal_distance(&mut self) {
+    pub fn init_orthogonal_distance(&mut self) {
         for square_a in 0..64 {
             let coord_a = Squares::from_repr(square_a as u8).unwrap();
 
@@ -317,15 +317,15 @@ impl Eval {
                     *endgame_score += OPEN_FILE_SCORE; // open file bonus
                 }
 
-                // rook on 7th bonus
+                // mobility bonus
+                *endgame_score += (gen.table.get_rook_attacks(square as u8, board.get_occ()).count_bits() as i32 - ROOK_UNITS) * ROOK_MOB_ENDGAME;
+                *opening_score += (gen.table.get_rook_attacks(square as u8, board.get_occ()).count_bits() as i32 - ROOK_UNITS) * ROOK_MOB_OPENING;
+
+                // 7th rank bonus
                 if square.rank() == 6 {
                     *opening_score += ROOK_ON_SEVENTH_OPENING_SCORE;
                     *endgame_score += ROOK_ON_SEVENTH_ENDGAME_SCORE;
                 }
-
-                // mobility bonus
-                *endgame_score += (gen.table.get_rook_attacks(square as u8, board.get_occ()).count_bits() as i32 - ROOK_UNITS) * ROOK_MOB_ENDGAME;
-                *opening_score += (gen.table.get_rook_attacks(square as u8, board.get_occ()).count_bits() as i32 - ROOK_UNITS) * ROOK_MOB_OPENING;
             }
             Black => {
                 *opening_score -= ROOK_SCORES[Opening as usize][square as usize];
@@ -345,15 +345,15 @@ impl Eval {
                     *endgame_score -= OPEN_FILE_SCORE; // open file bonus
                 }
 
-                // rook on 7th bonus
+                // mobility bonus
+                *endgame_score -= (gen.table.get_rook_attacks(square as u8, board.get_occ()).count_bits() as i32 - ROOK_UNITS) * ROOK_MOB_ENDGAME;
+                *opening_score -= (gen.table.get_rook_attacks(square as u8, board.get_occ()).count_bits() as i32 - ROOK_UNITS) * ROOK_MOB_OPENING;
+
+                // 7th rank bonus
                 if square.rank() == 1 {
                     *opening_score -= ROOK_ON_SEVENTH_OPENING_SCORE;
                     *endgame_score -= ROOK_ON_SEVENTH_ENDGAME_SCORE;
                 }
-
-                // mobility bonus
-                *endgame_score -= (gen.table.get_rook_attacks(square as u8, board.get_occ()).count_bits() as i32 - ROOK_UNITS) * ROOK_MOB_ENDGAME;
-                *opening_score -= (gen.table.get_rook_attacks(square as u8, board.get_occ()).count_bits() as i32 - ROOK_UNITS) * ROOK_MOB_OPENING;
 
             }
         }
@@ -379,7 +379,7 @@ impl Eval {
                 *endgame_score += (gen.table.get_queen_attacks(square as u8, board.get_occ()).count_bits() as i32 - QUEEN_UNITS) * QUEEN_MOB_ENDGAME;
                 *opening_score += (gen.table.get_queen_attacks(square as u8, board.get_occ()).count_bits() as i32 - QUEEN_UNITS) * QUEEN_MOB_OPENING;
 
-                // queen on 7th bonus
+                // 7th rank bonus
                 if square.rank() == 6 {
                     *opening_score += QUEEN_ON_SEVENTH_OPENING_SCORE;
                     *endgame_score += QUEEN_ON_SEVENTH_ENDGAME_SCORE;
@@ -393,11 +393,12 @@ impl Eval {
                 *endgame_score -= (gen.table.get_queen_attacks(square as u8, board.get_occ()).count_bits() as i32 - QUEEN_UNITS) * QUEEN_MOB_ENDGAME;
                 *opening_score -= (gen.table.get_queen_attacks(square as u8, board.get_occ()).count_bits() as i32 - QUEEN_UNITS) * QUEEN_MOB_OPENING;
 
-                // queen on 7th bonus
+                // 7th rank bonus
                 if square.rank() == 1 {
                     *opening_score -= QUEEN_ON_SEVENTH_OPENING_SCORE;
                     *endgame_score -= QUEEN_ON_SEVENTH_ENDGAME_SCORE;
                 }
+
             }
         }
     }
@@ -494,31 +495,41 @@ impl Eval {
     }
 
     pub fn mop_eval(&self, color: Color, board: &Board, friendly_score: i32, enemy_score: i32) -> i32 {
-        const PAWN_VALUE: i32 = 80;
-        let endgame_weight = self.get_endgame_weight(color, board);
+        // const PAWN_VALUE: i32 = 100;
+        // let endgame_weight = self.get_endgame_weight(color, board);
+        //
+        // if friendly_score > enemy_score + 2 * PAWN_VALUE {
+        //     let mut mopup = 0.0;
+        //     let white_king_square = board.get_king_square(White);
+        //     let black_king_square = board.get_king_square(Black);
+        //
+        //     let (friendly_king_square, enemy_king_square) = if board.get_side_to_move() == White {
+        //         (white_king_square, black_king_square)
+        //     } else {
+        //         (black_king_square, white_king_square)
+        //     };
+        //
+        //     mopup += ((14 - self.orthogonal_distance[friendly_king_square as usize][enemy_king_square as usize]) * 8) as f32;
+        //     mopup += (CENTER_MANHATTAN_DISTANCE[enemy_king_square as usize] * 10) as f32;
+        //
+        //     return if board.get_side_to_move() == White {
+        //         (mopup * endgame_weight) as i32
+        //     } else {
+        //         -(mopup * endgame_weight) as i32
+        //     }
+        // }
+        let mut mopup = 0;
 
-        if friendly_score > enemy_score + 2 * PAWN_VALUE && endgame_weight > 0.0 {
-            let mut mopup = 0.0;
-            let white_king_square = board.get_king_square(White);
-            let black_king_square = board.get_king_square(Black);
+        // reward moving king close to opponent king
+        mopup += (14 - self.orthogonal_distance[board.get_king_square(color) as usize][board.get_king_square(!color) as usize]) * 4;
+        // reward moving opponent king to corner
+        mopup += CENTER_MANHATTAN_DISTANCE[board.get_king_square(!color) as usize] * 10;
 
-            let (friendly_king_square, enemy_king_square) = if board.get_side_to_move() == White {
-                (white_king_square, black_king_square)
-            } else {
-                (black_king_square, white_king_square)
-            };
 
-            mopup += ((14 - self.orthogonal_distance[friendly_king_square as usize][enemy_king_square as usize]) * 4) as f32;
-            mopup += (CENTER_MANHATTAN_DISTANCE[enemy_king_square as usize] * 10) as f32;
-
-            return if board.get_side_to_move() == White {
-                (mopup * endgame_weight) as i32
-            } else {
-                -(mopup * endgame_weight) as i32
-            }
-        }
-        0
+        mopup
     }
+
+    // eval knigh & bishop checkmate
 
 
     #[inline(always)]
@@ -583,7 +594,7 @@ impl Eval {
             let white_mop = self.mop_eval(White, board, white_material_score, black_material_score);
             let black_mop = self.mop_eval(Black, board, black_material_score, white_material_score);
 
-            endgame_score += white_mop + black_mop;
+            endgame_score += white_mop - black_mop;
         }
 
         match game_phase {
@@ -622,7 +633,7 @@ impl Default for Eval {
         eval.init_rank_mask();
         eval.init_isolated_mask();
         eval.init_passed_mask();
-        eval.init_orhtogonal_distance();
+        eval.init_orthogonal_distance();
 
         eval
     }

@@ -56,9 +56,6 @@ impl Negamax {
             return 20000;
         }
 
-        if mov.is_promotion() {
-            return get_mvv_lva(mov) + 10010;
-        }
 
         if mov.capture.is_some() {
             get_mvv_lva(mov) + 10000
@@ -76,17 +73,22 @@ impl Negamax {
         &mut self,
         mut alpha: i32,
         mut beta: i32,
-        depth: usize,
+        mut depth: usize,
         board: &mut Board,
         gen: &mut MovGen,
         ply: usize,
     ) -> i32 {
         self.pv_length[ply] = ply;
+        let mut score = Self::MIN;
 
         let mut entry_def = Entry::default();
         entry_def.flag = EntryType::Alpha;
 
         if ply != 0 && self.draw_table.is_repeat(board.hash) {
+            return 0;
+        }
+
+        if board.is_fifty_move_draw() {
             return 0;
         }
 
@@ -131,12 +133,16 @@ impl Negamax {
         self.nodes += 1;
         let in_check = board.is_check(gen);
 
+        if in_check {
+            depth += 1;
+        }
+
         //Null Move Pruning
         if depth >= 3 && in_check == false && ply != 0 {
             self.draw_table.push(board.hash);
             let (enpassant, old_hash) = board.make_null_move();
 
-            let score = -self.negamax(
+            score = -self.negamax(
                 -beta,
                 -beta + 1,
                 depth - 1 - Self::NULL_WINDOW,
@@ -178,7 +184,6 @@ impl Negamax {
             }
         }
 
-        let mut score = Self::MIN;
         moves_list
             .0
             .sort_by(|a, b| self.score_move(b, ply).cmp(&self.score_move(a, ply)));
@@ -319,13 +324,21 @@ impl Negamax {
         ply: usize,
     ) -> i32 {
         self.nodes += 1;
+
+        if ply > Self::MAX_DEPTH - 1 {
+            return self.eval.evaluate(board, gen);
+        }
+
         let eval = self.eval.evaluate(board, gen);
 
         if eval >= beta {
             return beta;
         }
 
-        alpha = alpha.max(eval);
+        if eval > alpha {
+            alpha = eval;
+        }
+
 
         gen.generate_moves(board);
         let mut moves_list = gen.move_list.clone();
@@ -353,12 +366,13 @@ impl Negamax {
             self.draw_table.pop();
             board.unmake_move(a.unwrap());
 
-            if score >= beta {
-                return beta;
-            }
 
             if score > alpha {
                 alpha = score;
+
+                if score >= beta {
+                    return beta;
+                }
             }
         }
         alpha

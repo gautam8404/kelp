@@ -10,8 +10,8 @@ pub struct LookupTable {
     knight_attacks: Vec<BitBoard>,
     king_attacks: Vec<BitBoard>,
 
-    bishop_attacks: Vec<Vec<BitBoard>>,
-    rook_attacks: Vec<Vec<BitBoard>>,
+    bishop_attacks: Vec<Vec<BitBoard>>, // 64 * 512
+    rook_attacks: Vec<Vec<BitBoard>>, // 64 * 4096
 
     magic_table: MagicTable,
 }

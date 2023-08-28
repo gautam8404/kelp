@@ -25,7 +25,7 @@ impl<'a> Kelp<'a> {
     const ASPIRATION_WINDOW: i32 = 50;
 
     ///Creates a new instance of Kelp, populates the lookup table in case if its not populated beforehand
-    pub(crate) fn new(table: &'a mut LookupTable) -> Self {
+    pub fn new(table: &'a mut LookupTable) -> Self {
         table.populate();
         Kelp {
             board: Board::default(),
