@@ -1,6 +1,6 @@
 [package]
 name = "kelp_engine"
-version = "0.11.0"
+version = "0.11.1"
 authors = ["Gautam Dhingra <gautamdhingra8404@gmail.com>"]
 license = "MIT"
 description = "Kelp is a UCI compatible chess engine written in Rust.\nIt is released as a free software under GPLv License.\nFor more information visit https://github.com/gautam8404/kelp/#readme"
