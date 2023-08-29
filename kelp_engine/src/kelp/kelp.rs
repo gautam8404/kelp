@@ -77,6 +77,8 @@ impl<'a> Kelp<'a> {
         let mut alpha = Negamax::MIN;
         let mut beta = Negamax::MAX;
 
+        let mut prev_depth_best_move = None;
+
         //Iterative Deepening
         for i in 1..=depth {
             self.search.nodes = 0;
@@ -88,7 +90,7 @@ impl<'a> Kelp<'a> {
                 .negamax(alpha, beta, i, &mut self.board, &mut self.mov_gen, 0);
 
             if STOP.load(Ordering::Relaxed) {
-                STOP.store(false, Ordering::Relaxed);
+                // STOP.store(false, Ordering::Relaxed);
                 break;
             }
 
@@ -126,8 +128,14 @@ impl<'a> Kelp<'a> {
                 size: self.search.tt.get_hashmap_size_mb(),
             };
 
+            prev_depth_best_move = res.best_move;
             self.send_info(format!("{}", res).as_str());
             self.search.tt.reset_hits_and_misses();
+        }
+
+        if STOP.load(Ordering::Relaxed) { // if search was stopped
+            STOP.store(false, Ordering::Relaxed);
+            return prev_depth_best_move; // return best move from previous depth
         }
 
         STOP.store(false, Ordering::Relaxed);
