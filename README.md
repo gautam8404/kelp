@@ -6,8 +6,9 @@
     <img src="img/kelp.png" alt="Kelp" width="200">
 </p>
 
-Kelp is a UCI compatible chess engine written in Rust. It uses standard chess algorithms like alpha-beta pruning, PVS, LMR, Null Move Reduction, iterative deepening, quiescence search, etc.
-Kelp is made to be used as a library but that is work in progress. Currently, it can be used as a UCI engine. The evaluation needs a lot of work to be done especially the endgame evaluation.
+Kelp is a UCI compatible chess engine written in Rust Using standard chess algorithms.
+
+Kelp is work in progress. Currently, it can be used as a UCI engine But evaluation needs a lot of work to be done especially the endgame evaluation.
 
 ## Example
 
