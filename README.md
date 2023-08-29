@@ -14,6 +14,10 @@ Kelp is work in progress. Currently, it can be used as a UCI engine But evaluati
 
 ![Example](img/example.png)  
 
+## Installation
+
+Kelp Binary can be downloaded from [Releases](https://github.com/gautam8404/kelp/releases) page for Windows and Linux.
+
 ## Build
 
 ```bash
