@@ -135,7 +135,9 @@ impl<'a> Kelp<'a> {
 
         if STOP.load(Ordering::Relaxed) { // if search was stopped
             STOP.store(false, Ordering::Relaxed);
-            return prev_depth_best_move; // return best move from previous depth
+            if prev_depth_best_move.is_some() {
+                return prev_depth_best_move;
+            }
         }
 
         STOP.store(false, Ordering::Relaxed);
