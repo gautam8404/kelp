@@ -10,6 +10,14 @@ Kelp is a UCI compatible chess engine written in Rust Using standard chess algor
 
 Kelp is work in progress. Currently, it can be used as a UCI engine But evaluation needs a lot of work to be done especially the endgame evaluation.
 
+## Play Againts It
+
+
+Lichess:- https://lichess.org/@/KelpBot
+
+Kelp is UCI compatible it should work with any UCI compatimble gui, so far kelp has been tested on [Pychess](https://github.com/pychess/pychess), [BanskaiGUI](https://banksiagui.com/), [Arena](http://www.playwitharena.de/) and [cutechess](https://cutechess.com/).
+
+
 ## Example
 
 ![Example](img/example.png)  
