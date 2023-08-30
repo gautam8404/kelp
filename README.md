@@ -15,7 +15,7 @@ Kelp is work in progress. Currently, it can be used as a UCI engine But evaluati
 
 Lichess:- https://lichess.org/@/KelpBot
 
-Kelp is UCI compatible it should work with any UCI compatimble gui, so far kelp has been tested on [Pychess](https://github.com/pychess/pychess), [BanskaiGUI](https://banksiagui.com/), [Arena](http://www.playwitharena.de/) and [cutechess](https://cutechess.com/).
+Kelp is UCI compatible it should work with any UCI compatible gui, so far kelp has been tested on [Pychess](https://github.com/pychess/pychess), [BanskaiGUI](https://banksiagui.com/), [Arena](http://www.playwitharena.de/) and [cutechess](https://cutechess.com/).
 
 
 ## Example
