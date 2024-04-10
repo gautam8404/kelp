@@ -60,18 +60,10 @@ cargo build --release
 - Passed Pawns, Isolated Pawns, Doubled Pawns
 
 ### TODO
-- [ ] Pawn Structure
-- [ ] Endgame Evaluation
 - [ ] Better King Safety and Pawn Shield
 - [ ] Better Mobility
 - [ ] Better Mop Up Evaluation
-- [ ] fix threefold repetition completely (sometimes it doesn't work)
-- [ ] fix bad evaluation and moves (sometimes it makes bad moves)
 - [ ] Opening Book
-- [ ] Better Move Ordering using hash ordering
-- [ ] Refactor code and make modules private
-- [ ] Complete Library support
-- [ ] Better Time Management
 - [ ] Integrate Syzygy Endgame Tablebases
 - [ ] Integrate Stockfish's NNUE
 
