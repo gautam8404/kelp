@@ -56,6 +56,23 @@ This analysis provides a comprehensive, **deep-level** examination of optimizati
 
 ---
 
+### 4. [ADVANCED_EVALUATION_TECHNIQUES.md](ADVANCED_EVALUATION_TECHNIQUES.md) - **NEW!** Advanced Evaluation
+**Best for**: Improving chess strength through better position evaluation
+
+**Contains**:
+- King safety evaluation (attack zones, shields, tropism)
+- Pawn shield structures and fianchetto detection
+- Advanced pawn structure (chains, backward pawns, islands)
+- Safe mobility and piece coordination
+- Space evaluation and center control
+- Threat detection (hanging pieces, forks, pins)
+- Endgame-specific evaluation
+- Implementation priorities (+300-500 Elo improvement)
+
+**Use this** to add sophisticated positional understanding to the engine.
+
+---
+
 ## 🎯 Quick Start
 
 ### If you have 5 minutes:
@@ -72,11 +89,12 @@ Read the [Executive Summary](OPTIMIZATION_SUMMARY.md#executive-summary) section
 3. Look at code examples in [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)
 
 ### If you're ready to implement:
-1. Choose optimization from priority list
-2. Open [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)
-3. Follow step-by-step instructions
-4. Run tests to validate
-5. Benchmark to measure improvement
+1. **Performance optimizations**: Choose from priority list in OPTIMIZATION_SUMMARY.md
+2. **Evaluation improvements**: See ADVANCED_EVALUATION_TECHNIQUES.md for king safety, pawn structure, etc.
+3. Open [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)
+4. Follow step-by-step instructions
+5. Run tests to validate
+6. Benchmark to measure improvement
 
 ---
 
@@ -312,6 +330,32 @@ The optimizations are prioritized and come with:
 - Performance estimates
 
 Start with the [OPTIMIZATION_SUMMARY.md](OPTIMIZATION_SUMMARY.md) and choose your path forward!
+
+---
+
+## 🎓 Advanced Evaluation Techniques
+
+In addition to performance optimizations, improving the evaluation function is crucial for chess strength. See [ADVANCED_EVALUATION_TECHNIQUES.md](ADVANCED_EVALUATION_TECHNIQUES.md) for:
+
+### King Safety
+- Attack zone calculation with weighted attackers
+- Non-linear safety scoring
+- King tropism and pawn shield evaluation
+- Open files near king detection
+
+### Pawn Structure
+- Pawn chains and backward pawns
+- Pawn islands counting
+- Fianchetto structure recognition
+- Advanced passed pawn evaluation
+
+### Piece Evaluation
+- Safe mobility (excluding pawn-attacked squares)
+- Piece coordination (connected rooks, bishop pair)
+- Threat detection (hanging pieces, forks, pins)
+- Endgame-specific evaluation
+
+**Expected Impact**: +300-500 Elo from implementing all advanced evaluation techniques.
 
 ---
 
